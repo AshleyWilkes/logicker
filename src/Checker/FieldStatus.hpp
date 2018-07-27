@@ -1,5 +1,7 @@
 //#include <algorithm>
+#include <boost/optional.hpp>
 #include <map>
+#include <stdexcept>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -63,59 +65,6 @@ namespace Logicker {
   Condition<int> neq {neq_lambda};
 }
 
-//this assumes each solution fiels contains exactly 1 value
-//that's clearly not general enough, we can have empties
-//
-//the aforementioned assumption manifests in Field (as an abstraction
-//between Grid and Value) missing
-namespace Logicker::Checker {
-  template<class Value, class FieldCoords>
-  class SolutionGrid {
-    public:
-      SolutionGrid(const std::map<FieldCoords, Value>& grid_values);
-      const Value& get_value(const FieldCoords& coords) const;
-    private:
-      const std::map<FieldCoords, Value>& vals_;
-  };
-
-  template<class Value, class FieldCoords>
-  SolutionGrid<Value, FieldCoords>::SolutionGrid(const std::map<FieldCoords, Value>& grid_values) : vals_{grid_values} {}
-
-  template<class Value, class FieldCoords>
-  const Value& SolutionGrid<Value, FieldCoords>::get_value(const FieldCoords& coords) const {
-    return vals_.find(coords)->second;
-  }
-}
-
-//some preprocessing should be present in this (most importantly excluding empties,
-//i.e. not putting empties into values array)
-namespace Logicker::Checker {
-  template<class Value, class Topology>
-  class GridCondition {
-    public:
-      GridCondition(const Condition<Value>& cond, const std::vector<typename Topology::Coords>& fields);
-      bool is_satisfied_by(const SolutionGrid<Value, typename Topology::Coords>& grid) const;
-    private:
-      const Condition<Value>& cond_;
-      const std::vector<typename Topology::Coords> fields_;
-  };
-
-  template<class Value, class Topology>
-  GridCondition<Value, Topology>::GridCondition(const Condition<Value>& cond, const std::vector<typename Topology::Coords>& fields) : cond_{cond}, fields_{fields} {}
-
-  template<class Value, class Topology>
-  bool
-  GridCondition<Value, Topology>::is_satisfied_by(const SolutionGrid<Value, typename Topology::Coords>& grid) const {
-    std::vector<Value> vals;
-    //std::transform(fields_.begin(), fields_.end(), std::back_inserter(vals),
-    //    [grid](const Topology::Coords& coord) { return grid.get_value(coord); });
-    for (auto coord : fields_) {
-      vals.push_back(grid.get_value(coord));
-    }
-    return cond_.is_satisfied_by(vals);
-  }
-}
-
 namespace Logicker::Topology {
   using CoordsMetaGroup = std::string;
   using Index = int;
@@ -141,6 +90,17 @@ namespace Logicker::Topology {
 
       static CoordsGroupRange get_coords_groups(Size size, CoordsMetaGroup cmg, Direction direction);
   };
+
+  Rectangle::CoordsRange
+  Rectangle::get_all_coords(Size size) {
+    std::vector<Coords> result_vec;
+    for (int row = 0; row < size.first; ++row) {
+      for (int col = 0; col < size.second; ++col) {
+        result_vec.push_back({row, col});
+      }
+    }
+    return result_vec;
+  }
 
   Rectangle::CoordsGroupRange
   Rectangle::get_all_coords_groups(Size size) {
@@ -179,15 +139,30 @@ namespace Logicker {
     public:
       Grid(typename Topology::Size size);
 
+      typename Topology::CoordsRange get_all_coords();
+
       typename Topology::CoordsGroupRange get_all_coords_groups();
       typename Topology::CoordsRange get_coords_in_group(
           typename Topology::CoordsGroup group);
+
+      FieldType& get_field(typename Topology::Coords coords);
+      const FieldType& get_field(typename Topology::Coords coords) const;
     private:
       typename Topology::Size size_;
+      std::map<typename Topology::Coords, FieldType> fields_;
   };
 
   template<class FieldType, class Topology>
-  Grid<FieldType, Topology>::Grid(typename Topology::Size size) : size_{size} {}
+  Grid<FieldType, Topology>::Grid(typename Topology::Size size) : size_{size} {
+    for (auto coords : get_all_coords()) {
+      fields_[coords] = FieldType();
+    }
+  }
+
+  template<class FieldType, class Topology>
+  typename Topology::CoordsRange Grid<FieldType, Topology>::get_all_coords() {
+    return Topology::get_all_coords(size_);
+  }
 
   template<class FieldType, class Topology>
   typename Topology::CoordsGroupRange Grid<FieldType, Topology>::get_all_coords_groups() {
@@ -198,5 +173,81 @@ namespace Logicker {
   typename Topology::CoordsRange Grid<FieldType, Topology>::get_coords_in_group(
       typename Topology::CoordsGroup group) {
     return Topology::get_coords_in_group(size_, group);
+  }
+
+  template<class FieldType, class Topology>
+  FieldType& Grid<FieldType, Topology>::get_field(typename Topology::Coords coords) {
+    return fields_.at(coords);
+  }
+
+  template<class FieldType, class Topology>
+  const FieldType& Grid<FieldType, Topology>::get_field(typename Topology::Coords coords) const {
+    return fields_.at(coords);
+  }
+}
+
+namespace Logicker {
+  template<int min, int max>
+  class IntegerField {
+    public:
+      typedef int ValueType;
+
+      void set(int value);
+      int get() const;
+    private:
+      boost::optional<int> set_value_ { boost::none };
+  };
+
+  template<int min, int max>
+  void
+  IntegerField<min, max>::set(int value) {
+    if (set_value_) {
+      throw std::domain_error("field already set");
+    } else if (value < min || value > max) {
+      throw std::domain_error("value out of range");
+    } else {
+      set_value_ = value;
+    }
+  }
+
+  template<int min, int max>
+  int
+  IntegerField<min, max>::get() const {
+    if (set_value_) {
+      return set_value_.get();
+    } else {
+      throw std::domain_error("value not set");
+    }
+  }
+}
+
+//some preprocessing should be present in this (most importantly excluding empties,
+//i.e. not putting empties into values array)
+namespace Logicker::Checker {
+  template<class FieldType, class Topology>
+  class GridCondition {
+    public:
+      GridCondition(const Condition<typename FieldType::ValueType>& cond, const std::vector<typename Topology::Coords>& fields);
+      bool is_satisfied_by(const Grid<FieldType, Topology>& grid) const;
+    private:
+      const Condition<typename FieldType::ValueType>& cond_;
+      const std::vector<typename Topology::Coords> fields_;
+  };
+
+  template<class FieldType, class Topology>
+  GridCondition<FieldType, Topology>::GridCondition(const Condition<typename FieldType::ValueType>& cond, const std::vector<typename Topology::Coords>& fields) : cond_{cond}, fields_{fields} {}
+
+  //this assumes each solution field contains exactly 1 value
+  //that's clearly not general enough, we can have empties
+  template<class FieldType, class Topology>
+  bool
+  GridCondition<FieldType, Topology>::is_satisfied_by(const Grid<FieldType, Topology>& grid) const {
+    std::vector<typename FieldType::ValueType> vals;
+    //std::transform(fields_.begin(), fields_.end(), std::back_inserter(vals),
+    //    [grid](const Topology::Coords& coord) { return grid.get_field(coord).get(); });
+    for (auto coord : fields_) {
+      vals.push_back(grid.get_field(coord).get());
+    }
+    return cond_.is_satisfied_by(vals);
   }
 }
