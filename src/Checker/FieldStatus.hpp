@@ -6,36 +6,6 @@
 #include <utility>
 #include <vector>
 
-/*namespace Logicker::Util {
-  template<class ElemType>
-  using Container = std::vector<ElemType>;
-  template<class ElemType>
-  using ElemIt = typename Container<ElemType>::iterator;
-  template<class ElemType>
-  class ElemRange {
-    public:
-      ElemRange(const ElemIt<ElemType>& begin, const ElemIt<ElemType>& end);
-      ElemIt<ElemType> begin() const;
-      ElemIt<ElemType> end() const;
-    private:
-      const ElemIt<ElemType> begin_;
-      const ElemIt<ElemType> end_;
-  };
-
-  template<class ElemType>
-  ElemRange<ElemType>::ElemRange(const ElemIt<ElemType>& begin, const ElemIt<ElemType>& end) : begin_{begin}, end_{end} {}
-
-  template<class ElemType>
-  ElemIt<ElemType> ElemRange<ElemType>::begin() const {
-    return begin_;
-  }
-
-  template<class ElemType>
-  ElemIt<ElemType> ElemRange<ElemType>::end() const {
-    return end_;
-  }
-}*/
-
 //it is implicitly expected values form a linear structure, while that's
 //not the case (the structure can be nonexistent (set of values when
 //order doesn't matter) or nonlinear (e.g. square for e.g. loops))
@@ -139,14 +109,10 @@ namespace Logicker {
     public:
       Grid(typename Topology::Size size);
 
-      typename Topology::CoordsRange get_all_coords();
-
-      typename Topology::CoordsGroupRange get_all_coords_groups();
-      typename Topology::CoordsRange get_coords_in_group(
-          typename Topology::CoordsGroup group);
-
       FieldType& get_field(typename Topology::Coords coords);
       const FieldType& get_field(typename Topology::Coords coords) const;
+
+      void set_values(std::vector<int>& values);
     private:
       typename Topology::Size size_;
       std::map<typename Topology::Coords, FieldType> fields_;
@@ -154,25 +120,9 @@ namespace Logicker {
 
   template<class FieldType, class Topology>
   Grid<FieldType, Topology>::Grid(typename Topology::Size size) : size_{size} {
-    for (auto coords : get_all_coords()) {
+    for (auto coords : Topology::get_all_coords(size_)) {
       fields_[coords] = FieldType();
     }
-  }
-
-  template<class FieldType, class Topology>
-  typename Topology::CoordsRange Grid<FieldType, Topology>::get_all_coords() {
-    return Topology::get_all_coords(size_);
-  }
-
-  template<class FieldType, class Topology>
-  typename Topology::CoordsGroupRange Grid<FieldType, Topology>::get_all_coords_groups() {
-    return Topology::get_all_coords_groups(size_);
-  }
-
-  template<class FieldType, class Topology>
-  typename Topology::CoordsRange Grid<FieldType, Topology>::get_coords_in_group(
-      typename Topology::CoordsGroup group) {
-    return Topology::get_coords_in_group(size_, group);
   }
 
   template<class FieldType, class Topology>
@@ -183,6 +133,15 @@ namespace Logicker {
   template<class FieldType, class Topology>
   const FieldType& Grid<FieldType, Topology>::get_field(typename Topology::Coords coords) const {
     return fields_.at(coords);
+  }
+
+  template<class FieldType, class Topology>
+  void Grid<FieldType, Topology>::set_values(std::vector<int>& values) {
+    auto all_coords = Topology::get_all_coords(size_);
+    for (auto coords_it = all_coords.begin(), values_it = values.begin();
+        coords_it != all_coords.end(); ++coords_it, ++values_it) {
+      fields_[*coords_it].set(*values_it);
+    }
   }
 }
 
