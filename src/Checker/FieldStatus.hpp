@@ -1,4 +1,7 @@
+//#include <algorithm>
 #include <map>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 //it is implicitly expected values form a linear structure, while that's
@@ -36,9 +39,7 @@ namespace Logicker {
 //the aforementioned assumption manifests in Field (as an abstraction
 //between Grid and Value) missing
 namespace Logicker::Checker {
-  using FieldCoords = int;
-
-  template<class Value>
+  template<class Value, class FieldCoords>
   class SolutionGrid {
     public:
       SolutionGrid(const std::map<FieldCoords, Value>& grid_values);
@@ -47,11 +48,11 @@ namespace Logicker::Checker {
       const std::map<FieldCoords, Value>& vals_;
   };
 
-  template<class Value>
-  SolutionGrid<Value>::SolutionGrid(const std::map<FieldCoords, Value>& grid_values) : vals_{grid_values} {}
+  template<class Value, class FieldCoords>
+  SolutionGrid<Value, FieldCoords>::SolutionGrid(const std::map<FieldCoords, Value>& grid_values) : vals_{grid_values} {}
 
-  template<class Value>
-  const Value& SolutionGrid<Value>::get_value(const FieldCoords& coords) const {
+  template<class Value, class FieldCoords>
+  const Value& SolutionGrid<Value, FieldCoords>::get_value(const FieldCoords& coords) const {
     return vals_.find(coords)->second;
   }
 }
@@ -59,23 +60,25 @@ namespace Logicker::Checker {
 //some preprocessing should be present in this (most importantly excluding empties,
 //i.e. not putting empties into values array)
 namespace Logicker::Checker {
-  template<class Value>
+  template<class Value, class FieldCoords>
   class GridCondition {
     public:
       GridCondition(const Condition<Value>& cond, const std::vector<FieldCoords>& fields);
-      bool is_satisfied_by(const SolutionGrid<Value>& grid) const;
+      bool is_satisfied_by(const SolutionGrid<Value, FieldCoords>& grid) const;
     private:
       const Condition<Value>& cond_;
       const std::vector<FieldCoords>& fields_;
   };
 
-  template<class Value>
-  GridCondition<Value>::GridCondition(const Condition<Value>& cond, const std::vector<FieldCoords>& fields) : cond_{cond}, fields_{fields} {}
+  template<class Value, class FieldCoords>
+  GridCondition<Value, FieldCoords>::GridCondition(const Condition<Value>& cond, const std::vector<FieldCoords>& fields) : cond_{cond}, fields_{fields} {}
 
-  template<class Value>
+  template<class Value, class FieldCoords>
   bool
-  GridCondition<Value>::is_satisfied_by(const SolutionGrid<Value>& grid) const {
+  GridCondition<Value, FieldCoords>::is_satisfied_by(const SolutionGrid<Value, FieldCoords>& grid) const {
     std::vector<Value> vals;
+    //std::transform(fields_.begin(), fields_.end(), std::back_inserter(vals),
+    //    [grid](const FieldCoords& coord) { return grid.get_value(coord); });
     for (auto coord : fields_) {
       vals.push_back(grid.get_value(coord));
     }
@@ -83,3 +86,47 @@ namespace Logicker::Checker {
   }
 }
 
+namespace Logicker::Topology {
+  template<class ElemType>
+  using Container = std::vector<ElemType>;
+  template<class ElemType>
+  using ElemIt = typename Container<ElemType>::iterator;
+  template<class ElemType>
+  using ElemRange = std::pair<ElemIt<ElemType>, ElemIt<ElemType>>;
+
+  using CoordsMetaGroup = std::string;
+  using Index = int;
+  using Direction = bool;//true for normal direction, false for reverse
+
+  using CoordsGroup = std::tuple<CoordsMetaGroup, Index, Direction>;
+  using CoordsGroupIt = Container<CoordsGroup>::iterator;
+  using CoordsGroupRange = std::pair<CoordsGroupIt, CoordsGroupIt>;
+
+  static CoordsMetaGroup CMG_Rows = "Rows";
+  static CoordsMetaGroup CMG_Cols = "Cols";
+  static std::vector<CoordsMetaGroup> coords_meta_groups { CMG_Rows, CMG_Cols };
+
+  class Rectangle {
+    public:
+      typedef std::pair<int, int> Coords ;
+      typedef ElemRange<Coords> CoordsRange ;
+
+      //tohle vsechno udelat static; topologie nebudou instanciovatelne, neni proc
+      Rectangle(int rows, int cols);
+      CoordsRange get_all_coords();
+
+      CoordsGroupRange get_all_coords_groups();
+      CoordsRange get_coords_in_group(CoordsGroup group);
+
+      CoordsGroupRange get_coords_groups(CoordsMetaGroup, Direction);
+    
+  };
+}
+
+namespace Logicker {
+  template<class FieldType, class Topology>
+  class Grid {
+    public:
+      Grid(int num_rows, int num_cols);
+  };
+}
