@@ -1,23 +1,27 @@
-#include "Checker/FieldStatus.hpp"
+#include "core/condition_instance.hpp"
+#include "core/grid.hpp"
+#include "core/integer_field.hpp"
+#include "core/rectangle.hpp"
 #include <algorithm>
 #include <iostream>
 
 int main() {
   std::cout << "This is Logicker!\n";
 
-  using FieldType = Logicker::IntegerField<1, 2>;
-  using Top = Logicker::Topology::Rectangle;
-  Top::Size grid_size{ 2, 2 };
+  using namespace logicker::core;
+  using FieldType = integer_field<1, 2>;
+  using Topology = rectangle;
+  Topology::size grid_size{ 2, 2 };
 
-  std::vector<Logicker::Checker::GridCondition<FieldType, Top>> grid_conds;
-  for (auto coords_group : Top::get_all_coords_groups(grid_size)) {
+  std::vector<condition_instance<FieldType, Topology>> grid_conds;
+  for (auto coords_group : Topology::get_all_coords_groups(grid_size)) {
     grid_conds.push_back(
-        Logicker::Checker::GridCondition<FieldType, Top>(Logicker::neq, 
-          Top::get_coords_in_group(grid_size, coords_group)));
+        condition_instance<FieldType, Topology>(neq, 
+          Topology::get_coords_in_group(grid_size, coords_group)));
   }
 
-  Logicker::Grid<FieldType, Top> grid{ grid_size };
-  std::vector<int> vals {1, 2, 2, 1};
+  grid<FieldType, Topology> grid{ grid_size };
+  std::vector<FieldType::value_type> vals {1, 2, 2, 1};
   grid.set_values(vals);
 
   bool result = std::all_of(grid_conds.begin(), grid_conds.end(),
