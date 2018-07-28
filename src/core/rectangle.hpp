@@ -25,7 +25,7 @@ namespace logicker::core {
       //tohle vsechno udelat static; topologie nebudou instanciovatelne, neni proc
       static coords_range get_all_coords(size size);
 
-      static coords_group_range get_all_coords_groups(size size);
+      static coords_group_range get_all_coords_groups(size size, CoordsMetaGroup meta_group);
       static coords_range get_coords_in_group(size size, coords_group group);
   };
 
@@ -41,7 +41,7 @@ namespace logicker::core {
   }
 
   rectangle::coords_group_range
-  rectangle::get_all_coords_groups(size size) {
+  rectangle::get_all_coords_groups(size size, CoordsMetaGroup meta_group) {
     std::vector<coords_group> result_vec;
     for (int i = 0; i < size.first; ++i) {
       result_vec.push_back( {CMG_Rows, i, true } );

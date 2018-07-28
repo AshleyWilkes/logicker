@@ -1,10 +1,15 @@
 #pragma once
+#include <string>
 #include <vector>
 
 //it is implicitly expected values form a linear structure, while that's
 //not the case (the structure can be nonexistent (set of values when
 //order doesn't matter) or nonlinear (e.g. square for e.g. loops))
+//
+//takze tady by mel byt mozna jeste dalsi type paramater, namely Topology
 namespace logicker::core {
+  using ConditionDescription = std::string;
+
   template<class Value>
   class condition {
     public:
