@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace logicker::puzzle {
-  using condition_description = std::pair<core::CoordsMetaGroup, core::ConditionDescription>;
+  using condition_description = std::pair<std::vector<core::CoordsMetaGroup>, core::ConditionDescription>;
   template<int size>
   class latin_square {
     public:
@@ -33,7 +33,7 @@ namespace logicker::puzzle {
       //soubory policek; tyto soubory muzou mit ruzne topologie, takze
       //vnitrni vector mozna nema byt std::vector, ale pro ted to staci
       mutable std::vector<std::unique_ptr<core::condition_instance<field_type, topology>>> grid_conds_;
-      std::vector<condition_description> cond_descs_{ { "Rows+Cols", "EachValueOnce" } };
+      std::vector<condition_description> cond_descs_{ { { "Rows", "Cols" }, "EachValueOnce" } };
 
       void process_condition_description(condition_description cond_desc) const;
   };

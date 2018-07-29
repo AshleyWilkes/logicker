@@ -25,7 +25,7 @@ namespace logicker::core {
       //tohle vsechno udelat static; topologie nebudou instanciovatelne, neni proc
       static coords_range get_all_coords(size size);
 
-      static coords_group_range get_all_coords_groups(size size, CoordsMetaGroup meta_group);
+      static coords_group_range get_all_coords_groups(size size, const std::vector<CoordsMetaGroup>& meta_group);
       static coords_range get_coords_in_group(size size, coords_group group);
   };
 
@@ -41,13 +41,20 @@ namespace logicker::core {
   }
 
   rectangle::coords_group_range
-  rectangle::get_all_coords_groups(size size, CoordsMetaGroup meta_group) {
+  rectangle::get_all_coords_groups(size size, const std::vector<CoordsMetaGroup>& meta_groups) {
     std::vector<coords_group> result_vec;
-    for (int i = 0; i < size.first; ++i) {
-      result_vec.push_back( {CMG_Rows, i, true } );
-    }
-    for (int i = 0; i < size.second; ++i) {
-      result_vec.push_back( {CMG_Cols, i, true } );
+    for (auto group : meta_groups) {
+      if (group == "Rows") {
+        for (int i = 0; i < size.first; ++i) {
+          result_vec.push_back( { CMG_Rows, i, true } );
+        }
+      } else if (group == "Cols") {
+        for (int i = 0; i < size.second; ++i) {
+          result_vec.push_back( { CMG_Cols, i, true } );
+        }
+      } else {
+        throw "unsupported meta group";
+      }
     }
     return result_vec;
   }
