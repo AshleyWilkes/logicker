@@ -21,6 +21,8 @@ namespace logicker::core {
   template<class FieldType, class Topology>
   class grid {
     public:
+      typedef elimination_deduction<FieldType, Topology> deduction_type;
+
       grid(typename Topology::size size);
 
       FieldType& get_field(typename Topology::coords coords);
