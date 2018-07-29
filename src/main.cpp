@@ -23,13 +23,16 @@ int main() {
   }*/
 
   try {
-  using puzzle_type = logicker::puzzle::latin_square<4>;
-  using puzzle_instance = logicker::core::puzzle_instance<puzzle_type>;
-  puzzle_instance puzzle({ 4, 4 });
-  using checker = logicker::core::checker<puzzle_type>;
-  checker chckr{ std::move(puzzle) };
-  using field_type = puzzle_type::field_type;
-  using topology = puzzle_type::topology;
+  using logicker::puzzle::latin_square;
+  using logicker::core::puzzle_instance;
+  using puzzle_t = puzzle_instance<latin_square<4>>;
+  using checker_t = logicker::core::checker<puzzle_t>;
+
+  puzzle_t puzzle({ 4, 4 });
+  checker_t checker{ std::move(puzzle) };
+
+  using field_type = puzzle_t::field_type;
+  using topology = puzzle_t::topology;
 
   std::vector<int> vals {
     1,2,3,4,
@@ -43,7 +46,7 @@ int main() {
   }
   sol_grid.set_values(vals);
 
-  std::cout << std::boolalpha << chckr.is_solved_by(sol_grid) <<'\n';
+  std::cout << std::boolalpha << checker.is_solved_by(sol_grid) <<'\n';
   std::cout << sol_grid;
 
   } catch (char const* e) {
