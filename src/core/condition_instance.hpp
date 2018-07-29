@@ -13,6 +13,7 @@ namespace logicker::core {
   class condition_instance {
     public:
       virtual bool is_satisfied_by(const grid<FieldType, Topology>& grid) const = 0;
+      virtual bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const = 0;
       virtual boost::optional<typename grid<FieldType, Topology>::deduction_type>
         try_to_find_deduction(const grid<FieldType, Topology>& grid) const = 0;
       
@@ -26,6 +27,7 @@ namespace logicker::core {
       simple_condition_instance(const condition<typename FieldType::value_type>& cond, const std::vector<typename Topology::coords>& fields);
 
       bool is_satisfied_by(const grid<FieldType, Topology>& grid) const override;
+      bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
       boost::optional<typename grid<FieldType, Topology>::deduction_type>
         try_to_find_deduction(const grid<FieldType, Topology>& grid) const override;
     private:
@@ -39,6 +41,7 @@ namespace logicker::core {
       void add(std::unique_ptr<condition_instance<FieldType, Topology>> part);
 
       bool is_satisfied_by(const grid<FieldType, Topology>& grid) const override;
+      bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
       boost::optional<typename grid<FieldType, Topology>::deduction_type>
         try_to_find_deduction(const grid<FieldType, Topology>& grid) const override;
     private:
@@ -53,13 +56,23 @@ namespace logicker::core {
   template<class FieldType, class Topology>
   bool
   simple_condition_instance<FieldType, Topology>::is_satisfied_by(const grid<FieldType, Topology>& grid) const {
-    std::vector<typename FieldType::value_type> vals;
+    std::vector<typename FieldType::value_type> cond_vals;
     //std::transform(fields_.begin(), fields_.end(), std::back_inserter(vals),
     //    [grid](const Topology::coords& coord) { return grid.get_field(coord).get(); });
     for (auto coord : fields_) {
-      vals.push_back(grid.get_field(coord).get());
+      cond_vals.push_back(grid.get_field(coord).get());
     }
-    return cond_.is_satisfied_by(vals);
+    return cond_.is_satisfied_by(cond_vals);
+  }
+
+  template<class FieldType, class Topology>
+  bool 
+  simple_condition_instance<FieldType, Topology>::is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const {
+    std::vector<typename FieldType::value_type> cond_vals;
+    for (auto coord : fields_) {
+      cond_vals.push_back(values.at(coord.index()));
+    }
+    return cond_.is_satisfied_by(cond_vals);
   }
 
   template<class FieldType, class Topology>
@@ -96,6 +109,17 @@ namespace logicker::core {
     return true;
     //return std::all_of(parts_.begin(), parts_.end(), 
         //[grid](auto part){ return part->is_satisfied_by(grid); });
+  }
+
+  template<class FieldType, class Topology>
+  bool 
+  composite_condition_instance<FieldType, Topology>::is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const {
+    for (auto it = parts_.begin(); it != parts_.end(); ++it) {
+      if (! (*it)->is_satisfied_by(values)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   template<class FieldType, class Topology>

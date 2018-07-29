@@ -31,14 +31,16 @@ int main() {
   puzzle_t puzzle({ 4, 4 });
   checker_t checker{ std::move(puzzle) };
 
-  using field_type = puzzle_t::field_type;
-  using topology = puzzle_t::topology;
-
   std::vector<int> vals {
     1,2,3,4,
     3,4,1,2,
     2,3,4,1,
     4,1,2,3};
+
+  std::cout << std::boolalpha << checker.is_solved_by(vals) << '\n';
+
+  /*using field_type = puzzle_t::field_type;
+  using topology = puzzle_t::topology;
 
   logicker::core::grid<field_type, topology> sol_grid { puzzle.grid_size() };
   for (auto coords : topology::get_all_coords( puzzle.grid_size() )) {
@@ -47,7 +49,7 @@ int main() {
   sol_grid.set_values(vals);
 
   std::cout << std::boolalpha << checker.is_solved_by(sol_grid) <<'\n';
-  std::cout << sol_grid;
+  std::cout << sol_grid;*/
 
   } catch (char const* e) {
     std::cout << e;
