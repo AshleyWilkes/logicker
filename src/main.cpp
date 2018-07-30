@@ -39,17 +39,19 @@ int main() {
 
   std::cout << std::boolalpha << checker.is_solved_by(vals) << '\n';
 
-  /*using field_type = puzzle_t::field_type;
+  //using field_type = puzzle_t::field_type;
+  using field_type = logicker::core::field_type<int>;
+  field_type field_t{ 1, 4 };
   using topology = puzzle_t::topology;
 
-  logicker::core::grid<field_type, topology> sol_grid { puzzle.grid_size() };
+  logicker::core::grid<field_type, topology> sol_grid { puzzle.grid_size(), field_t };
   for (auto coords : topology::get_all_coords( puzzle.grid_size() )) {
-    sol_grid.get_field(coords).set_limits(1, 4);
+    //sol_grid.get_field(coords).set_limits(1, 4);
   }
   sol_grid.set_values(vals);
 
   std::cout << std::boolalpha << checker.is_solved_by(sol_grid) <<'\n';
-  std::cout << sol_grid;*/
+  std::cout << sol_grid;
 
   } catch (char const* e) {
     std::cout << e;

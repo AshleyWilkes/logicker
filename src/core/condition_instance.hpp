@@ -82,8 +82,8 @@ namespace logicker::core {
       throw "simple_condition_instance::try_to_find_deduction -- only 2 fields deductioning impled";
     }
     //tady predpokladam, ze kdyz je field is_set, tak obsahuje hodnotu, ono vubec integer field je na pikacu
-    FieldType f1 = grid.get_field(fields_[0]);
-    FieldType f2 = grid.get_field(fields_[1]);
+    field<FieldType> f1 = grid.get_field(fields_[0]);
+    field<FieldType> f2 = grid.get_field(fields_[1]);
     if (f1.is_set() && f2.is_value_option(f1.get())) {
       return typename grid<FieldType, Topology>::deduction_type { fields_[1], f1.get() };
     } else if (f2.is_set() && f1.is_value_option(f2.get())) {

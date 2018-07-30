@@ -1,4 +1,5 @@
 #pragma once
+#include "field.hpp"
 #include <iostream>
 #include <map>
 #include <vector>
@@ -23,10 +24,10 @@ namespace logicker::core {
     public:
       typedef elimination_deduction<FieldType, Topology> deduction_type;
 
-      grid(typename Topology::size size);
+      grid(typename Topology::size size, const FieldType& field_type);
 
-      FieldType& get_field(typename Topology::coords coords);
-      const FieldType& get_field(typename Topology::coords coords) const;
+      field<FieldType>& get_field(typename Topology::coords coords);
+      const field<FieldType>& get_field(typename Topology::coords coords) const;
 
       void set_values(std::vector<int>& values);
 
@@ -35,23 +36,23 @@ namespace logicker::core {
       friend std::ostream& operator<< <>(std::ostream& os, const grid<FieldType, Topology>& grid);
     private:
       typename Topology::size size_;
-      std::map<typename Topology::coords, FieldType> fields_;
+      std::map<typename Topology::coords, field<FieldType>> fields_;
   };
 
   template<class FieldType, class Topology>
-  grid<FieldType, Topology>::grid(typename Topology::size size) : size_{size} {
+  grid<FieldType, Topology>::grid(typename Topology::size size, const FieldType& field_type) : size_{size} {
     for (auto coords : Topology::get_all_coords(size_)) {
-      fields_[coords] = FieldType();
+      fields_.insert({ coords, field<FieldType>(field_type) });
     }
   }
 
   template<class FieldType, class Topology>
-  FieldType& grid<FieldType, Topology>::get_field(typename Topology::coords coords) {
+  field<FieldType>& grid<FieldType, Topology>::get_field(typename Topology::coords coords) {
     return fields_.at(coords);
   }
 
   template<class FieldType, class Topology>
-  const FieldType& grid<FieldType, Topology>::get_field(typename Topology::coords coords) const {
+  const field<FieldType>& grid<FieldType, Topology>::get_field(typename Topology::coords coords) const {
     return fields_.at(coords);
   }
 
@@ -60,7 +61,7 @@ namespace logicker::core {
     auto all_coords = Topology::get_all_coords(size_);
     for (auto coords_it = all_coords.begin(), values_it = values.begin();
         coords_it != all_coords.end(); ++coords_it, ++values_it) {
-      fields_[*coords_it].set(*values_it);
+      fields_.at(*coords_it).set(*values_it);
     }
   }
 
