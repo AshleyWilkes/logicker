@@ -1,7 +1,10 @@
 #include "puzzle/latin_square.hpp"
+#include "core/input_node.hpp"
 #include "core/puzzle_instance.hpp"
 #include "core/checker.hpp"
 #include <iostream>
+#include <map>
+#include <memory>
 #include <vector>
 
 int main() {
@@ -28,14 +31,26 @@ int main() {
   using puzzle_t = puzzle_instance<latin_square>;
   using checker_t = logicker::core::checker<puzzle_t>;
 
-  puzzle_t puzzle({ 4, 4 });
-  checker_t checker{ std::move(puzzle) };
+  using base_input = logicker::core::input_node_base;
+  using int_input = logicker::core::int_input_node;
+  using composite_input = logicker::core::composite_input_node;
+  std::shared_ptr<base_input> size_input = std::make_shared<int_input>(int_input{ "Size", 4 });
+  std::map<std::string, std::shared_ptr<base_input>> map;
+  map.insert({ "Size", std::move(size_input) });
+  composite_input input{ "Size", map };
+  puzzle_t puzzle_inst = puzzle_t::primitive_create( input );
+  checker_t checker{ std::move(puzzle_inst) };
 
   std::vector<int> vals {
     1,2,3,4,
     3,4,1,2,
     2,3,4,1,
     4,1,2,3};
+
+  std::cout << std::boolalpha << checker.is_solved_by(vals) << '\n';
+
+  /*puzzle_t puzzle({ 4, 4 });
+  checker_t checker{ std::move(puzzle) };
 
   std::cout << std::boolalpha << checker.is_solved_by(vals) << '\n';
 
@@ -51,7 +66,7 @@ int main() {
   sol_grid.set_values(vals);
 
   std::cout << std::boolalpha << checker.is_solved_by(sol_grid) <<'\n';
-  std::cout << sol_grid;
+  std::cout << sol_grid;*/
 
   } catch (char const* e) {
     std::cout << e;

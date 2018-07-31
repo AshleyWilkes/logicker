@@ -1,4 +1,5 @@
 #pragma once
+#include "input_node.hpp"
 
 namespace logicker::core {
   template<class PuzzleType>
@@ -10,19 +11,22 @@ namespace logicker::core {
       typedef typename core::condition_instance<field_type, topology> condition_instance;
       typedef typename std::unique_ptr<condition_instance> condition_instance_p;
 
-      puzzle_instance(typename topology::size size);
+      puzzle_instance(typename topology::size size, const field_type& field_type);
       typename topology::size grid_size() const;
       std::vector<condition_instance_p>& get_condition_instances() const;
+
+      static puzzle_instance<PuzzleType> primitive_create(const input_node_base& input);
     private:
       const typename topology::size grid_size_;
       mutable std::vector<condition_instance_p> grid_conds_;
+      mutable grid_type grid;
 
       void init_grid_conds() const;
       void init_grid_conds(const puzzle::condition_description& cond_desc) const;
   };
 
   template<class PuzzleType>
-  puzzle_instance<PuzzleType>::puzzle_instance(typename topology::size size) : grid_size_{ size } {}
+  puzzle_instance<PuzzleType>::puzzle_instance(typename topology::size size, const field_type& field_type) : grid_size_{ size }, grid { size, field_type } {}
 
   template<class PuzzleType>
   typename puzzle_instance<PuzzleType>::topology::size
@@ -57,5 +61,25 @@ namespace logicker::core {
               topology::get_coords_in_group(
                   grid_size(), group)));
     }
+  }
+
+  template<class PuzzleType>
+  puzzle_instance<PuzzleType>
+  puzzle_instance<PuzzleType>::primitive_create(const input_node_base& input) {
+    const composite_input_node& cast_input = dynamic_cast<const composite_input_node&>( input );
+    const int_input_node* cast = dynamic_cast<const int_input_node*>( cast_input.get("Size"));
+    if (cast->name() != "Size") {
+      throw "Expected node with name \"Size\"!";
+    }
+    int size_int = cast->get();
+    field_type field_t{ 1, size_int }; 
+    typename topology::size size_top{ size_int, size_int };
+    puzzle_instance<PuzzleType> result { size_top, field_t };
+    /*if (input_node_base* givens_input = cast_input.get("Givens")) {
+      std::cout << "Yes givens\n";
+    } else {
+      std::cout << "No givens\n";
+    }*/
+    return result;
   }
 }
