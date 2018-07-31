@@ -25,7 +25,7 @@ int main() {
   try {
   using logicker::puzzle::latin_square;
   using logicker::core::puzzle_instance;
-  using puzzle_t = puzzle_instance<latin_square<4>>;
+  using puzzle_t = puzzle_instance<latin_square>;
   using checker_t = logicker::core::checker<puzzle_t>;
 
   puzzle_t puzzle({ 4, 4 });
