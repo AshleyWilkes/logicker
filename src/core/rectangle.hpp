@@ -38,11 +38,13 @@ namespace logicker::core {
       class rectangle_coords {
         public:
           rectangle_coords(size size, int row, int col);
+          rectangle_coords(int row, int col);
           int row() { return row_; }
           int col() { return col_; }
           int index() { return index_; }
           size get_size() { return size_; }
           friend bool operator<(const rectangle_coords& lhs, const rectangle_coords& rhs);
+          friend bool operator==(const rectangle_coords& lhs, const rectangle_coords& rhs);
         private:
           const int row_;
           const int col_;
@@ -62,10 +64,18 @@ namespace logicker::core {
   };
 
   bool operator<(const rectangle::rectangle_coords& lhs, const rectangle::rectangle_coords& rhs) {
-    return lhs.index_ < rhs.index_;
+    if (lhs.row_ < rhs.row_) return true;
+    if (lhs.row_ == rhs.row_) return lhs.col_ < rhs.col_;
+    return false;
+  }
+
+  bool operator==(const rectangle::rectangle_coords& lhs, const rectangle::rectangle_coords& rhs) {
+    return (lhs.row_ == rhs.row_) && (lhs.col_ == rhs.col_);
   }
 
   rectangle::rectangle_coords::rectangle_coords(rectangle::size size, int row, int col) : row_{row}, col_{col}, index_{row * size.second + col}, size_{size} {}
+  
+  rectangle::rectangle_coords::rectangle_coords(int row, int col) : row_{ row }, col_{ col }, index_{ -1 } {}
 
   rectangle::coords_range
   rectangle::get_all_coords(size size) {

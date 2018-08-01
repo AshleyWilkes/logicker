@@ -14,6 +14,7 @@ namespace logicker::core {
       //vector zase pro posilani vstupu jako vectoru Values
       bool is_solved_by(typename PuzzleInstanceType::grid_type grid) const;
       bool is_solved_by(const std::vector<typename PuzzleInstanceType::field_type::value_type>& values) const;
+      typename PuzzleInstanceType::grid_type get_assignment_grid() const;
     private:
       const PuzzleInstanceType assign_;
   };
@@ -35,5 +36,11 @@ namespace logicker::core {
     auto& conds = assign_.get_condition_instances();
     return std::all_of(conds.begin(), conds.end(),
         [values](auto& cond_p){ return cond_p->is_satisfied_by( values ); });
+  }
+
+  template<class PuzzleInstanceType>
+  typename PuzzleInstanceType::grid_type
+  checker<PuzzleInstanceType>::get_assignment_grid() const {
+    return assign_.get_grid();
   }
 }

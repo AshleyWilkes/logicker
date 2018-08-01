@@ -43,12 +43,17 @@ namespace logicker::core {
 
   int
   field_type<int>::value_to_index(value_type value) const {
-    return (indices_.find(value))->second;
+    auto it = indices_.find(value);
+    if (it != indices_.end()) {
+      return it->second;
+    } else {
+      throw "Unknown value";
+    }
   }
 
   typename field_type<int>::value_type
   field_type<int>::index_to_value(int index) const {
-    return values_[index];
+    return values_.at(index);
   }
 
   std::vector<typename field_type<int>::value_type>

@@ -13,6 +13,8 @@ namespace logicker::core {
 
       puzzle_instance(typename topology::size size, const field_type& field_type);
       typename topology::size grid_size() const;
+      grid_type get_grid() const;
+      grid_type& get_grid();
       std::vector<condition_instance_p>& get_condition_instances() const;
 
       static puzzle_instance<PuzzleType> primitive_create(const input_node_base& input);
@@ -32,6 +34,18 @@ namespace logicker::core {
   typename puzzle_instance<PuzzleType>::topology::size
   puzzle_instance<PuzzleType>::grid_size() const {
     return grid_size_;
+  }
+
+  template<class PuzzleType>
+  typename puzzle_instance<PuzzleType>::grid_type
+  puzzle_instance<PuzzleType>::get_grid() const {
+    return grid;
+  }
+
+  template<class PuzzleType>
+  typename puzzle_instance<PuzzleType>::grid_type&
+  puzzle_instance<PuzzleType>::get_grid() {
+    return grid;
   }
 
   template<class PuzzleType>

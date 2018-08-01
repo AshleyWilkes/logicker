@@ -5,6 +5,12 @@
 
 namespace logicker::core {
   template<class FieldType>
+  class field;
+
+  template<class FieldType>
+  std::ostream& operator<<(std::ostream& os, const field<FieldType>& field);
+
+  template<class FieldType>
   class field {
     public:
       typedef typename FieldType::value_type value_type;
@@ -15,6 +21,8 @@ namespace logicker::core {
       void eliminate(value_type value);
       bool is_set() const;
       bool is_value_option(value_type value) const;
+
+      friend std::ostream& operator<< <>(std::ostream& os, const field<FieldType>& field);
     private:
       const FieldType type_;
       boost::optional<value_type> set_value_ { boost::none };
@@ -29,8 +37,8 @@ namespace logicker::core {
   template<class FieldType>
   void
   field<FieldType>::set(value_type value) {
-    if (set_value_) {
-      throw "field already set";
+    if (set_value_ && set_value_ != value) {
+      throw "field already set to another value";
     }
     int index = type_.value_to_index(value);
     //index should be ok here, value_to_index should throw if not
@@ -78,5 +86,15 @@ namespace logicker::core {
   bool
   field<FieldType>::is_value_option(value_type value) const {
     return options_.test(type_.value_to_index(value));
+  }
+
+  template<class FieldType>
+  std::ostream&
+  operator<<(std::ostream& os, const field<FieldType>& field) {
+    if (field.set_value_) {
+      os << " " << field.set_value_.get() << " ";
+    } else {
+      os << "(" << field.options_.count() << ")";
+    }
   }
 }
