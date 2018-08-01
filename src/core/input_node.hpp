@@ -21,11 +21,20 @@ namespace logicker::core {
     public:
       composite_input_node(std::string name, std::map<std::string, std::shared_ptr<input_node_base>> parts)
           : name_{ name }, parts_{ std::move(parts) } {}
+      composite_input_node(const composite_input_node& rhs) : name_{ rhs.name_ }, parts_{ rhs.parts_ } {}
+      composite_input_node& operator=(composite_input_node&& rhs) { name_ = std::move( rhs.name_ ); parts_ = std::move( rhs.parts_ ); }
       std::string name() const override { return name_; }
-      input_node_base* get(std::string name) const { return parts_.find(name)->second.get(); }
+
+      template<class target_input_node>
+      const target_input_node& get(std::string name) const;
+
+      typedef std::map<std::string, std::shared_ptr<input_node_base>> map;
+      typedef map::const_iterator iterator;
+      iterator begin() const { return parts_.begin(); }
+      iterator end() const { return parts_.end(); }
     private:
       std::string name_;
-      std::map<std::string, std::shared_ptr<input_node_base>> parts_;
+      map parts_;
   };
 
   class int_input_node : public input_node_base {
@@ -39,4 +48,16 @@ namespace logicker::core {
       std::string name_;
       int value_;
   };
+
+  template<class target_input_node>
+  const target_input_node&
+  composite_input_node::get(std::string name) const {
+    auto it = parts_.find(name);
+    if (it != parts_.end()) {
+      const input_node_base* base_ptr = it->second.get();
+      return dynamic_cast<const target_input_node&>(*base_ptr);
+    } else {
+      throw std::string("part named \"") + name + "\" not found in node \"" + name_ + "\"";
+    }
+  }
 }

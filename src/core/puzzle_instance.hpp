@@ -1,5 +1,4 @@
 #pragma once
-#include "input_node.hpp"
 
 namespace logicker::core {
   template<class PuzzleType>
@@ -16,8 +15,6 @@ namespace logicker::core {
       grid_type get_grid() const;
       grid_type& get_grid();
       std::vector<condition_instance_p>& get_condition_instances() const;
-
-      static puzzle_instance<PuzzleType> primitive_create(const input_node_base& input);
     private:
       const typename topology::size grid_size_;
       mutable std::vector<condition_instance_p> grid_conds_;
@@ -75,25 +72,5 @@ namespace logicker::core {
               topology::get_coords_in_group(
                   grid_size(), group)));
     }
-  }
-
-  template<class PuzzleType>
-  puzzle_instance<PuzzleType>
-  puzzle_instance<PuzzleType>::primitive_create(const input_node_base& input) {
-    const composite_input_node& cast_input = dynamic_cast<const composite_input_node&>( input );
-    const int_input_node* cast = dynamic_cast<const int_input_node*>( cast_input.get("Size"));
-    if (cast->name() != "Size") {
-      throw "Expected node with name \"Size\"!";
-    }
-    int size_int = cast->get();
-    field_type field_t{ 1, size_int }; 
-    typename topology::size size_top{ size_int, size_int };
-    puzzle_instance<PuzzleType> result { size_top, field_t };
-    /*if (input_node_base* givens_input = cast_input.get("Givens")) {
-      std::cout << "Yes givens\n";
-    } else {
-      std::cout << "No givens\n";
-    }*/
-    return result;
   }
 }
