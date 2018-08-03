@@ -10,6 +10,13 @@
 //i.e. not putting empties into values array)
 namespace logicker::core {
   template<class FieldType, class Topology>
+  class simple_condition_instance;
+
+  template<class FieldType, class Topology>
+  bool operator<(const simple_condition_instance<FieldType, Topology>& lhs,
+      const simple_condition_instance<FieldType, Topology>& rhs);
+
+  template<class FieldType, class Topology>
   class condition_instance {
     public:
       virtual bool is_satisfied_by(const grid<FieldType, Topology>& grid) const = 0;
@@ -30,6 +37,9 @@ namespace logicker::core {
       bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
       boost::optional<typename grid<FieldType, Topology>::deduction_type>
         try_to_find_deduction(const grid<FieldType, Topology>& grid) const override;
+
+      friend bool operator< <>(const simple_condition_instance<FieldType, Topology>& lhs,
+          const simple_condition_instance<FieldType, Topology>& rhs);
     private:
       const condition<typename FieldType::value_type>& cond_;
       const std::vector<typename Topology::coords> fields_;
@@ -92,6 +102,12 @@ namespace logicker::core {
     return boost::none;
   }
 
+  /*template<class FieldType, class Topology>
+  bool
+  operator<(const simple_condition_instance<FieldType, Topology>& lhs, const simple_condition_instance<FieldType, Topology>& rhs) {
+    return true;
+  }*/
+
   template<class FieldType, class Topology>
   void
   composite_condition_instance<FieldType, Topology>::add(std::unique_ptr<condition_instance<FieldType, Topology>> part) {
@@ -130,8 +146,8 @@ namespace logicker::core {
       if (potential_deduction) {
         return potential_deduction;
       }
-      return boost::none;
     }
+    return boost::none;
   }
 
   template<class FieldType, class Topology>

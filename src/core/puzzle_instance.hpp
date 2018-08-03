@@ -6,6 +6,7 @@ namespace logicker::core {
     public:
       typedef typename PuzzleType::field_type field_type;
       typedef typename PuzzleType::topology topology;
+      typedef typename topology::coords coords_type;
       typedef typename core::grid<field_type, topology> grid_type;
       typedef typename core::condition_instance<field_type, topology> condition_instance;
       typedef typename std::unique_ptr<condition_instance> condition_instance_p;

@@ -26,8 +26,8 @@ int main() {
   using puzzle_t = puzzle_instance<latin_square>;
   using checker_t = logicker::core::checker<puzzle_t>;
 
-  using base_input = logicker::core::input_node_base;
-  using int_input = logicker::core::int_input_node;
+  //using base_input = logicker::core::input_node_base;
+  //using int_input = logicker::core::int_input_node;
   using composite_input = logicker::core::composite_input_node;
 
   std::vector<int> vals {

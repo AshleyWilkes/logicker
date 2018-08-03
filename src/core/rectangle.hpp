@@ -44,7 +44,7 @@ namespace logicker::core {
           int index() { return index_; }
           size get_size() { return size_; }
           friend bool operator<(const rectangle_coords& lhs, const rectangle_coords& rhs);
-          friend bool operator==(const rectangle_coords& lhs, const rectangle_coords& rhs);
+          //friend bool operator==(const rectangle_coords& lhs, const rectangle_coords& rhs);
         private:
           const int row_;
           const int col_;
@@ -69,9 +69,9 @@ namespace logicker::core {
     return false;
   }
 
-  bool operator==(const rectangle::rectangle_coords& lhs, const rectangle::rectangle_coords& rhs) {
+  /*bool operator==(const rectangle::rectangle_coords& lhs, const rectangle::rectangle_coords& rhs) {
     return (lhs.row_ == rhs.row_) && (lhs.col_ == rhs.col_);
-  }
+  }*/
 
   rectangle::rectangle_coords::rectangle_coords(rectangle::size size, int row, int col) : row_{row}, col_{col}, index_{row * size.second + col}, size_{size} {}
   
@@ -112,7 +112,7 @@ namespace logicker::core {
     std::vector<coords> result_vec;
     CoordsMetaGroup cmg{ std::get<0>(group) };
     Index index{ std::get<1>(group) };
-    Direction dir{ std::get<2>(group) };
+    //Direction dir{ std::get<2>(group) };
     if (cmg == CMG_Rows) {
       for (int col = 0; col < size.second; ++col) {
         result_vec.push_back({size, index, col});

@@ -1,3 +1,10 @@
 cmake_minimum_required (VERSION 3.2.2)
-project (Logicker)
+project (Logicker VERSION 0.0.1 LANGUAGES CXX)
+#include_directories (/home/ashley/boost_1_67_0)
+include_directories (/usr/include/jsoncpp)
+add_compile_options (-Wall)
+set (CMAKE_BUILD_TYPE Debug)
+enable_testing ()
+
+link_libraries (jsoncpp)
 add_executable (main src/main.cpp)

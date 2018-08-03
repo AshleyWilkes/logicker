@@ -31,7 +31,7 @@ namespace logicker::core {
   field_type<int>::field_type(value_type min, value_type max) : field_type{ field_type<int>::limits_to_range(min, max) } {}
 
   field_type<int>::field_type(std::vector<value_type> values) : values_{values} {
-    for (int i = 0; i < values_.size(); ++i) {
+    for (std::size_t i = 0; i < values_.size(); ++i) {
       indices_.insert({ values_[i], i });
     }
   }

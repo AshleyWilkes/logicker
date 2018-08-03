@@ -26,7 +26,7 @@ namespace logicker::core {
           : name_{ name }, parts_{ std::move(parts) } {}
       composite_input_node(std::string name, const Json::Value& value);
       composite_input_node(const composite_input_node& rhs) : name_{ rhs.name_ }, parts_{ rhs.parts_ } {}
-      composite_input_node& operator=(composite_input_node&& rhs) { name_ = std::move( rhs.name_ ); parts_ = std::move( rhs.parts_ ); }
+      composite_input_node& operator=(composite_input_node&& rhs) { name_ = std::move( rhs.name_ ); parts_ = std::move( rhs.parts_ ); return *this; }
       std::string name() const override { return name_; }
 
       template<class target_input_node>
@@ -45,7 +45,7 @@ namespace logicker::core {
     public:
       int_input_node(std::string name, int value) : name_{ name }, value_{ value } {}
       int_input_node(const int_input_node& rhs) : name_{ rhs.name_ }, value_{ rhs.value_ } {}
-      int_input_node& operator=(int_input_node&& rhs) { name_ = std::move( rhs.name_ ); value_ = rhs.value_; }
+      int_input_node& operator=(int_input_node&& rhs) { name_ = std::move( rhs.name_ ); value_ = rhs.value_; return *this; }
       std::string name() const override { return name_; }
       int get() const { return value_; }
     private:
@@ -70,7 +70,7 @@ namespace logicker::core {
         parts_.insert({ member_name, input_node_base::json_to_node( member_name, value[member_name] ) });
       }
     } else if ( value.isArray() ) {
-      for ( int i = 0; i < value.size(); ++i ) {
+      for ( Json::Value::ArrayIndex i = 0; i < value.size(); ++i ) {
         std::string name{ "#" + i };
         parts_.insert({ name, input_node_base::json_to_node( name, value[i] ) });
       }

@@ -30,7 +30,7 @@ namespace logicker::core {
   };
 
   template<class FieldType>
-  field<FieldType>::field(const FieldType& type) : options_{ type.size() }, type_{ type } {
+  field<FieldType>::field(const FieldType& type) : type_{ type }, options_{ type.size() } {
     options_ = ~options_;
   }
 
@@ -96,5 +96,6 @@ namespace logicker::core {
     } else {
       os << "(" << field.options_.count() << ")";
     }
+    return os;
   }
 }
