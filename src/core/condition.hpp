@@ -16,7 +16,7 @@ namespace logicker::core {
       condition(bool (*eval)(const std::vector<Value>&));
       bool is_satisfied_by(const std::vector<Value>& values) const;
     private:
-      bool (*const eval_)(const std::vector<Value>&);
+      bool (*eval_)(const std::vector<Value>&);
   };
 
   template<class Value>

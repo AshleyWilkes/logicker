@@ -16,7 +16,7 @@
 int main() {
   try {
   std::cout << "This is Logicker!\n";
-  std::ifstream is{ "latin_square2x2.lgc" };
+  std::ifstream is{ "latin_square3x3.lgc" };
   std::string input_str{ std::istreambuf_iterator<char>( is ),
     std::istreambuf_iterator<char>() };
 
@@ -30,9 +30,13 @@ int main() {
   //using int_input = logicker::core::int_input_node;
   using composite_input = logicker::core::composite_input_node;
 
-  std::vector<int> vals {
+  /*std::vector<int> vals {
     1,2,
-    2,1};
+    2,1};*/
+  std::vector<int> vals {
+    1,3,2,
+    3,2,1,
+    2,1,3};
   /*std::vector<int> vals {
     1,2,3,4,
     3,4,1,2,
@@ -47,6 +51,13 @@ int main() {
 
   composite_input input{ "Input", input_json_value };
 
+  using solver_t = logicker::core::solver<puzzle_t>;
+  using solver_factory_t = logicker::core::solver_factory<puzzle_t>;
+
+  puzzle_t puzzle_inst2 = factory_t::create( input );
+  solver_t solver = solver_factory_t().create_solver_for_assignment( std::move(puzzle_inst2) );
+  std::cout << "Solver's solution:\n" << solver.get_solution();
+
   puzzle_t puzzle_inst = factory_t::create( input );
   checker_t checker{ std::move(puzzle_inst) };
 
@@ -56,12 +67,6 @@ int main() {
   sol_grid.set_values(vals);
 
   std::cout << "Solved by grid: " << std::boolalpha << checker.is_solved_by(sol_grid) <<'\n';
-
-  using solver_t = logicker::core::solver<puzzle_t>;
-
-  puzzle_t puzzle_inst2 = factory_t::create( input );
-  solver_t solver{ std::move(puzzle_inst2) };
-  std::cout << "Solver's solution:\n" << solver.get_solution();
 
   } catch (char const* e) {
     std::cout << e << '\n';

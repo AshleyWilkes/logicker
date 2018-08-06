@@ -46,10 +46,10 @@ namespace logicker::core {
           friend bool operator<(const rectangle_coords& lhs, const rectangle_coords& rhs);
           //friend bool operator==(const rectangle_coords& lhs, const rectangle_coords& rhs);
         private:
-          const int row_;
-          const int col_;
-          const int index_;
-          const size size_;
+          int row_;
+          int col_;
+          int index_;
+          size size_;
       };
       typedef rectangle_coords coords;
       typedef std::vector<coords> coords_range;

@@ -8,14 +8,16 @@ namespace logicker::core {
       typedef typename PuzzleType::topology topology;
       typedef typename topology::coords coords_type;
       typedef typename core::grid<field_type, topology> grid_type;
+      using deduction_type = typename grid_type::deduction_type;
       typedef typename core::condition_instance<field_type, topology> condition_instance;
-      typedef typename std::unique_ptr<condition_instance> condition_instance_p;
+      typedef typename std::shared_ptr<condition_instance> condition_instance_p;
 
       puzzle_instance(typename topology::size size, const field_type& field_type);
       typename topology::size grid_size() const;
       grid_type get_grid() const;
       grid_type& get_grid();
       std::vector<condition_instance_p>& get_condition_instances() const;
+      std::vector<simple_condition_instance<field_type, topology>> get_simple_condition_instances() const;
     private:
       const typename topology::size grid_size_;
       mutable std::vector<condition_instance_p> grid_conds_;
@@ -26,7 +28,9 @@ namespace logicker::core {
   };
 
   template<class PuzzleType>
-  puzzle_instance<PuzzleType>::puzzle_instance(typename topology::size size, const field_type& field_type) : grid_size_{ size }, grid { size, field_type } {}
+  puzzle_instance<PuzzleType>::puzzle_instance(typename topology::size size, const field_type& field_type) : grid_size_{ size }, grid { size, field_type } {
+    init_grid_conds();
+  }
 
   template<class PuzzleType>
   typename puzzle_instance<PuzzleType>::topology::size
@@ -49,11 +53,23 @@ namespace logicker::core {
   template<class PuzzleType>
   std::vector<typename puzzle_instance<PuzzleType>::condition_instance_p>&
   puzzle_instance<PuzzleType>::get_condition_instances() const {
-    if (grid_conds_.empty()) {
-      init_grid_conds();
-    }
     return grid_conds_;
   }
+
+  template<class PuzzleType>
+  std::vector<simple_condition_instance<typename PuzzleType::field_type, typename PuzzleType::topology>>
+  puzzle_instance<PuzzleType>::get_simple_condition_instances() const {
+    //!!THIS IMPLEMENTATION requires rectangle and condition_instance be
+    //moveable, i.e. not have const members!!
+    std::vector<simple_condition_instance<field_type, topology>> result;
+    for ( auto& grid_cond : grid_conds_ ) {
+      std::vector<simple_condition_instance<field_type, topology>> grid_cond_simples = (*grid_cond).get_as_simple_instances_vector();
+      result.insert( result.end(), grid_cond_simples.begin(), grid_cond_simples.end() );
+    }
+    return result;
+  }
+
+
 
   template<class PuzzleType>
   void

@@ -64,7 +64,7 @@ namespace logicker::core {
   void
   field<FieldType>::eliminate(value_type value) {
     int index = type_.value_to_index(value);
-    if (options_.test(index)) {
+    if (!options_.test(index)) {
       throw "value already eliminated";
     } else if (set_value_) {
       throw "value already set";

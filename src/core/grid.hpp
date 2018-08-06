@@ -37,6 +37,8 @@ namespace logicker::core {
       void set_value(coords_type coords, value_type value);
 
       size_type size() const;
+
+      void perform_deduction(elimination_deduction<FieldType, Topology> deduction);
       
       friend std::ostream& operator<< <>(std::ostream& os, const grid<FieldType, Topology>& grid);
     private:
@@ -79,6 +81,13 @@ namespace logicker::core {
   typename grid<FieldType, Topology>::size_type
   grid<FieldType, Topology>::size() const {
     return size_;
+  }
+
+  template<class FieldType, class Topology>
+  void
+  grid<FieldType, Topology>::perform_deduction(elimination_deduction<FieldType, Topology> deduction) {
+    auto& field = get_field( deduction.coords_ );
+    field.eliminate( deduction.value_ );
   }
 
   template<class FieldType, class Topology>
