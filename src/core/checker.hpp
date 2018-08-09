@@ -25,9 +25,8 @@ namespace logicker::core {
   template<class PuzzleInstanceType>
   bool
   checker<PuzzleInstanceType>::is_solved_by(typename PuzzleInstanceType::grid_type grid) const {
-    auto& conds = assign_.get_condition_instances();
-    return std::all_of(conds.begin(), conds.end(),
-        [grid](auto& cond_p){ return cond_p->is_satisfied_by( grid ); });
+    std::vector<typename PuzzleInstanceType::field_type::value_type> vals = grid.get_values();
+    return is_solved_by( vals );
   }
 
   template<class PuzzleInstanceType>

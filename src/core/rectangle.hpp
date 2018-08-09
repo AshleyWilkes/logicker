@@ -22,8 +22,8 @@ namespace logicker::core {
   //2a) je to vyborny napad, oddeluje to logiku toho, ze policka maji
   //mezi sebou vztahy (treba jsou sousedni) od toho, ze grid je skupina
   //policek. condition_instance maji obsahovat jen indexy svych policek,
-  //??coz by mel byt prvni krok k odstraneni templaty Topology z condition
-  //instance??
+  //coz by mel byt prvni krok k odstraneni templaty Topology z condition
+  //instance
   //!!!!!!!!!!!!!!!!!!!!!!!!!
   //3) zavedeni indexu implikuje nove invarianty:
   //-- get_all_coords() musi coordsy vracet vzdy ve stejnem poradi

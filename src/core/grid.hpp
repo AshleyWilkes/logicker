@@ -37,6 +37,10 @@ namespace logicker::core {
       void set_values(std::vector<value_type>& values);
       void set_value(coords_type coords, value_type value);
 
+      //each field must contain exactly 1 value, this is not nearly general enough
+      //ok for now
+      std::vector<value_type> get_values();
+
       topology_type topology() const { return topology_; }
 
       void perform_deduction(elimination_deduction<FieldType, Topology> deduction);
@@ -82,6 +86,16 @@ namespace logicker::core {
   void
   grid<FieldType, Topology>::set_value(coords_type coords, value_type value) {
     get_field(coords).set(value);
+  }
+
+  template<class FieldType, class Topology>
+  std::vector<typename grid<FieldType, Topology>::value_type>
+  grid<FieldType, Topology>::get_values() {
+    std::vector<value_type> result;
+    for (int i = 0; i < topology_.fields_count(); ++i) {
+      result.push_back( fields_.at(i).get() );
+    }
+    return result;
   }
 
   template<class FieldType, class Topology>
