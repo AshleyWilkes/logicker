@@ -19,6 +19,11 @@ namespace logicker::core {
   //2) soucasti coords je nove index; ten usnadnuje implementaci
   //condition::is_satisfied_by(std::vector<value_type>); tohle nebylo
   //v planu a ted neni jasne, zda je to dobry napad
+  //2a) je to vyborny napad, oddeluje to logiku toho, ze policka maji
+  //mezi sebou vztahy (treba jsou sousedni) od toho, ze grid je skupina
+  //policek. condition_instance maji obsahovat jen indexy svych policek,
+  //??coz by mel byt prvni krok k odstraneni templaty Topology z condition
+  //instance??
   //!!!!!!!!!!!!!!!!!!!!!!!!!
   //3) zavedeni indexu implikuje nove invarianty:
   //-- get_all_coords() musi coordsy vracet vzdy ve stejnem poradi
@@ -38,7 +43,6 @@ namespace logicker::core {
       class rectangle_coords {
         public:
           rectangle_coords(topology_size_t size, int row, int col);
-          rectangle_coords(int row, int col);
           int row() { return row_; }
           int col() { return col_; }
           int index() { return index_; }
@@ -84,8 +88,6 @@ namespace logicker::core {
 
   rectangle::rectangle_coords::rectangle_coords(rectangle::topology_size_t size, int row, int col) : row_{row}, col_{col}, index_{row * size.second + col}, size_{size} {}
   
-  rectangle::rectangle_coords::rectangle_coords(int row, int col) : row_{ row }, col_{ col }, index_{ -1 } {}
-
   rectangle::coords_range
   rectangle::get_all_coords() {
     std::vector<coords> result_vec;
