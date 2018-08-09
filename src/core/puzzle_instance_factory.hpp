@@ -37,7 +37,7 @@ namespace logicker::core {
     const int_input_node& size_input = cast_input.get<int_input_node>("Size");
     int size = size_input.get();
     typename puzzle_instance<PuzzleType>::field_type field_type{ 1, size }; 
-    typename puzzle_instance<PuzzleType>::topology::size topology_size{ size, size };
+    typename puzzle_instance<PuzzleType>::topology::topology_size_t topology_size{ size, size };
     puzzle_instance<PuzzleType> result{ topology_size, field_type };
     const composite_input_node& givens_input = cast_input.get<composite_input_node>("Givens");
     for (auto single_given_input : givens_input) {

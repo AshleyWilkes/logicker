@@ -23,7 +23,8 @@ namespace logicker::core {
   class grid {
     public:
       typedef Topology topology_type;
-      typedef typename Topology::size size_type;
+      using size_type = typename Topology::topology_size_t;
+      //typedef typename Topology::size size_type;
       typedef typename Topology::coords coords_type;
       typedef typename FieldType::value_type value_type;
       typedef elimination_deduction<FieldType, Topology> deduction_type;
@@ -36,36 +37,40 @@ namespace logicker::core {
       void set_values(std::vector<value_type>& values);
       void set_value(coords_type coords, value_type value);
 
-      size_type size() const;
+      topology_type topology() const { return topology_; }
 
       void perform_deduction(elimination_deduction<FieldType, Topology> deduction);
       
       friend std::ostream& operator<< <>(std::ostream& os, const grid<FieldType, Topology>& grid);
     private:
-      size_type size_;
+      //size_type size_;
+      topology_type topology_;//nebo nejaky pointer? ale proc?
       std::map<coords_type, field<FieldType>> fields_;
   };
 
   template<class FieldType, class Topology>
-  grid<FieldType, Topology>::grid(size_type size, const FieldType& field_type) : size_{size} {
-    for (auto coords : Topology::get_all_coords(size_)) {
+  grid<FieldType, Topology>::grid(size_type size, const FieldType& field_type) : topology_{size} {
+    for (auto coords : topology_.get_all_coords()) {
       fields_.insert({ coords, field<FieldType>(field_type) });
     }
   }
 
   template<class FieldType, class Topology>
-  field<FieldType>& grid<FieldType, Topology>::get_field(coords_type coords) {
+  field<FieldType>&
+  grid<FieldType, Topology>::get_field(coords_type coords) {
     return fields_.at(coords);
   }
 
   template<class FieldType, class Topology>
-  const field<FieldType>& grid<FieldType, Topology>::get_field(coords_type coords) const {
+  const field<FieldType>&
+  grid<FieldType, Topology>::get_field(coords_type coords) const {
     return fields_.at(coords);
   }
 
   template<class FieldType, class Topology>
-  void grid<FieldType, Topology>::set_values(std::vector<value_type>& values) {
-    auto all_coords = Topology::get_all_coords(size_);
+  void
+  grid<FieldType, Topology>::set_values(std::vector<value_type>& values) {
+    auto all_coords = topology_.get_all_coords();
     for (auto coords_it = all_coords.begin(), values_it = values.begin();
         coords_it != all_coords.end(); ++coords_it, ++values_it) {
       set_value(*coords_it, *values_it);
@@ -73,14 +78,9 @@ namespace logicker::core {
   }
 
   template<class FieldType, class Topology>
-  void grid<FieldType, Topology>::set_value(coords_type coords, value_type value) {
+  void
+  grid<FieldType, Topology>::set_value(coords_type coords, value_type value) {
     fields_.at(coords).set(value);
-  }
-
-  template<class FieldType, class Topology>
-  typename grid<FieldType, Topology>::size_type
-  grid<FieldType, Topology>::size() const {
-    return size_;
   }
 
   template<class FieldType, class Topology>
@@ -93,8 +93,8 @@ namespace logicker::core {
   template<class FieldType, class Topology>
   std::ostream&
   operator<<(std::ostream& os, const grid<FieldType, Topology>& grid) {
-    for (auto row : Topology::get_all_coords_groups(grid.size(), { "Rows" })) {
-      for (auto coords : Topology::get_coords_in_group(grid.size(), row)) {
+    for (auto row : grid.topology().get_all_coords_groups({ "Rows" })) {
+      for (auto coords : grid.topology().get_coords_in_group(row)) {
         os << grid.get_field(coords) << " ";
         //auto field = grid.get_field(coords);
         //os << field.get() << " ";

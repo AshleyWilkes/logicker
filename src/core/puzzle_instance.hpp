@@ -12,42 +12,34 @@ namespace logicker::core {
       typedef typename core::condition_instance<field_type, topology> condition_instance;
       typedef typename std::shared_ptr<condition_instance> condition_instance_p;
 
-      puzzle_instance(typename topology::size size, const field_type& field_type);
-      typename topology::size grid_size() const;
+      puzzle_instance(typename topology::topology_size_t size, const field_type& field_type);
       grid_type get_grid() const;
       grid_type& get_grid();
       std::vector<condition_instance_p>& get_condition_instances() const;
       std::vector<simple_condition_instance<field_type, topology>> get_simple_condition_instances() const;
     private:
-      const typename topology::size grid_size_;
       mutable std::vector<condition_instance_p> grid_conds_;
-      mutable grid_type grid;
+      mutable grid_type grid_;
 
       void init_grid_conds() const;
       void init_grid_conds(const puzzle::condition_description& cond_desc) const;
   };
 
   template<class PuzzleType>
-  puzzle_instance<PuzzleType>::puzzle_instance(typename topology::size size, const field_type& field_type) : grid_size_{ size }, grid { size, field_type } {
+  puzzle_instance<PuzzleType>::puzzle_instance(typename topology::topology_size_t size, const field_type& field_type) : grid_ { size, field_type } {
     init_grid_conds();
-  }
-
-  template<class PuzzleType>
-  typename puzzle_instance<PuzzleType>::topology::size
-  puzzle_instance<PuzzleType>::grid_size() const {
-    return grid_size_;
   }
 
   template<class PuzzleType>
   typename puzzle_instance<PuzzleType>::grid_type
   puzzle_instance<PuzzleType>::get_grid() const {
-    return grid;
+    return grid_;
   }
 
   template<class PuzzleType>
   typename puzzle_instance<PuzzleType>::grid_type&
   puzzle_instance<PuzzleType>::get_grid() {
-    return grid;
+    return grid_;
   }
 
   template<class PuzzleType>
@@ -82,12 +74,11 @@ namespace logicker::core {
   template<class PuzzleType>
   void
   puzzle_instance<PuzzleType>::init_grid_conds(const puzzle::condition_description& cond_desc) const {
-    for (const auto& group : topology::get_all_coords_groups(grid_size(), cond_desc.first)) {
+    for (const auto& group : grid_.topology().get_all_coords_groups(cond_desc.first)) {
       grid_conds_.push_back(
           condition_instance::create_instance(
               cond_desc.second, 
-              topology::get_coords_in_group(
-                  grid_size(), group)));
+              grid_.topology().get_coords_in_group(group)));
     }
   }
 }

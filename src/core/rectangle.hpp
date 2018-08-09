@@ -34,34 +34,43 @@ namespace logicker::core {
   //indexu, ale nemuselo by se ukladat dovnitr coords tridy
   class rectangle {
     public:
-      typedef std::pair<int, int> size;
+      typedef std::pair<int, int> topology_size_t;
       class rectangle_coords {
         public:
-          rectangle_coords(size size, int row, int col);
+          rectangle_coords(topology_size_t size, int row, int col);
           rectangle_coords(int row, int col);
           int row() { return row_; }
           int col() { return col_; }
           int index() { return index_; }
-          size get_size() { return size_; }
+          topology_size_t get_size() { return size_; }
           friend bool operator<(const rectangle_coords& lhs, const rectangle_coords& rhs);
           //friend bool operator==(const rectangle_coords& lhs, const rectangle_coords& rhs);
         private:
           int row_;
           int col_;
           int index_;
-          size size_;
+          topology_size_t size_;
       };
       typedef rectangle_coords coords;
       typedef std::vector<coords> coords_range;
       typedef std::tuple<CoordsMetaGroup, Index, Direction> coords_group;
       typedef std::vector<coords_group> coords_group_range;
 
+      rectangle(topology_size_t size);
+      topology_size_t size() { return size_; }
       //tohle vsechno udelat static; topologie nebudou instanciovatelne, neni proc
-      static coords_range get_all_coords(size size);
+      //wrong! je proc, to posilani size objektu jako parametru vsech techto metod
+      //je ugly a kdyz uz si grid musi uchovavat instanci size, to uz si stejne
+      //dobre muze uchovavat instanci Topology. Taky je to citelnejsi.
+      coords_range get_all_coords();
 
-      static coords_group_range get_all_coords_groups(size size, const std::vector<CoordsMetaGroup>& meta_group);
-      static coords_range get_coords_in_group(size size, coords_group group);
+      coords_group_range get_all_coords_groups(const std::vector<CoordsMetaGroup>& meta_group);
+      coords_range get_coords_in_group(coords_group group);
+    private:
+      topology_size_t size_;
   };
+
+  rectangle::rectangle(rectangle::topology_size_t size) : size_{ size } {}
 
   bool operator<(const rectangle::rectangle_coords& lhs, const rectangle::rectangle_coords& rhs) {
     if (lhs.row_ < rhs.row_) return true;
@@ -73,31 +82,31 @@ namespace logicker::core {
     return (lhs.row_ == rhs.row_) && (lhs.col_ == rhs.col_);
   }*/
 
-  rectangle::rectangle_coords::rectangle_coords(rectangle::size size, int row, int col) : row_{row}, col_{col}, index_{row * size.second + col}, size_{size} {}
+  rectangle::rectangle_coords::rectangle_coords(rectangle::topology_size_t size, int row, int col) : row_{row}, col_{col}, index_{row * size.second + col}, size_{size} {}
   
   rectangle::rectangle_coords::rectangle_coords(int row, int col) : row_{ row }, col_{ col }, index_{ -1 } {}
 
   rectangle::coords_range
-  rectangle::get_all_coords(size size) {
+  rectangle::get_all_coords() {
     std::vector<coords> result_vec;
-    for (int row = 0; row < size.first; ++row) {
-      for (int col = 0; col < size.second; ++col) {
-        result_vec.push_back({size, row, col});
+    for (int row = 0; row < size_.first; ++row) {
+      for (int col = 0; col < size_.second; ++col) {
+        result_vec.push_back({size_, row, col});
       }
     }
     return result_vec;
   }
 
   rectangle::coords_group_range
-  rectangle::get_all_coords_groups(size size, const std::vector<CoordsMetaGroup>& meta_groups) {
+  rectangle::get_all_coords_groups(const std::vector<CoordsMetaGroup>& meta_groups) {
     std::vector<coords_group> result_vec;
     for (auto group : meta_groups) {
       if (group == "Rows") {
-        for (int i = 0; i < size.first; ++i) {
+        for (int i = 0; i < size_.first; ++i) {
           result_vec.push_back( { CMG_Rows, i, true } );
         }
       } else if (group == "Cols") {
-        for (int i = 0; i < size.second; ++i) {
+        for (int i = 0; i < size_.second; ++i) {
           result_vec.push_back( { CMG_Cols, i, true } );
         }
       } else {
@@ -108,18 +117,18 @@ namespace logicker::core {
   }
 
   rectangle::coords_range
-  rectangle::get_coords_in_group(size size, coords_group group) {
+  rectangle::get_coords_in_group(coords_group group) {
     std::vector<coords> result_vec;
     CoordsMetaGroup cmg{ std::get<0>(group) };
     Index index{ std::get<1>(group) };
     //Direction dir{ std::get<2>(group) };
     if (cmg == CMG_Rows) {
-      for (int col = 0; col < size.second; ++col) {
-        result_vec.push_back({size, index, col});
+      for (int col = 0; col < size_.second; ++col) {
+        result_vec.push_back({size_, index, col});
       }
     } else if (cmg == CMG_Cols) {
-      for (int row = 0; row < size.first; ++row) {
-        result_vec.push_back({size, row, index});
+      for (int row = 0; row < size_.first; ++row) {
+        result_vec.push_back({size_, row, index});
       }
     }
     return result_vec;
