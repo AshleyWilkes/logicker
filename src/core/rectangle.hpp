@@ -62,11 +62,12 @@ namespace logicker::core {
 
       rectangle(topology_size_t size);
       topology_size_t size() { return size_; }
+
       //tohle vsechno udelat static; topologie nebudou instanciovatelne, neni proc
       //wrong! je proc, to posilani size objektu jako parametru vsech techto metod
       //je ugly a kdyz uz si grid musi uchovavat instanci size, to uz si stejne
       //dobre muze uchovavat instanci Topology. Taky je to citelnejsi.
-      coords_range get_all_coords();
+      int fields_count() const;
 
       coords_group_range get_all_coords_groups(const std::vector<CoordsMetaGroup>& meta_group);
       coords_range get_coords_in_group(coords_group group);
@@ -88,15 +89,9 @@ namespace logicker::core {
 
   rectangle::rectangle_coords::rectangle_coords(rectangle::topology_size_t size, int row, int col) : row_{row}, col_{col}, index_{row * size.second + col}, size_{size} {}
   
-  rectangle::coords_range
-  rectangle::get_all_coords() {
-    std::vector<coords> result_vec;
-    for (int row = 0; row < size_.first; ++row) {
-      for (int col = 0; col < size_.second; ++col) {
-        result_vec.push_back({size_, row, col});
-      }
-    }
-    return result_vec;
+  int
+  rectangle::fields_count() const {
+    return size_.first * size_.second;
   }
 
   rectangle::coords_group_range

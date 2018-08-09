@@ -45,42 +45,43 @@ namespace logicker::core {
     private:
       //size_type size_;
       topology_type topology_;//nebo nejaky pointer? ale proc?
-      std::map<coords_type, field<FieldType>> fields_;
+      //std::map<coords_type, field<FieldType>> fields_;
+      std::vector<field<FieldType>> fields_;
   };
 
   template<class FieldType, class Topology>
   grid<FieldType, Topology>::grid(size_type size, const FieldType& field_type) : topology_{size} {
-    for (auto coords : topology_.get_all_coords()) {
-      fields_.insert({ coords, field<FieldType>(field_type) });
+    for (int i = 0; i < topology_.fields_count(); ++i) {
+      fields_.push_back( field<FieldType>(field_type) );
     }
   }
 
   template<class FieldType, class Topology>
   field<FieldType>&
   grid<FieldType, Topology>::get_field(coords_type coords) {
-    return fields_.at(coords);
+    return fields_.at(coords.index());
   }
 
   template<class FieldType, class Topology>
   const field<FieldType>&
   grid<FieldType, Topology>::get_field(coords_type coords) const {
-    return fields_.at(coords);
+    return fields_.at(coords.index());
   }
 
   template<class FieldType, class Topology>
   void
   grid<FieldType, Topology>::set_values(std::vector<value_type>& values) {
-    auto all_coords = topology_.get_all_coords();
-    for (auto coords_it = all_coords.begin(), values_it = values.begin();
-        coords_it != all_coords.end(); ++coords_it, ++values_it) {
-      set_value(*coords_it, *values_it);
+    auto value_it = values.begin();
+    for (int i = 0; i < topology_.fields_count(); ++i) {
+      value_type& value = *value_it++;
+      fields_.at(i).set( value );
     }
   }
 
   template<class FieldType, class Topology>
   void
   grid<FieldType, Topology>::set_value(coords_type coords, value_type value) {
-    fields_.at(coords).set(value);
+    get_field(coords).set(value);
   }
 
   template<class FieldType, class Topology>
