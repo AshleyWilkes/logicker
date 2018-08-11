@@ -60,7 +60,7 @@ namespace logicker::core {
       typedef std::tuple<CoordsMetaGroup, Index, Direction> coords_group;
       typedef std::vector<coords_group> coords_group_range;
 
-      rectangle(topology_size_t size);
+      explicit rectangle(topology_size_t size);
       topology_size_t size() { return size_; }
 
       //tohle vsechno udelat static; topologie nebudou instanciovatelne, neni proc

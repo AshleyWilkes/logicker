@@ -12,7 +12,7 @@ namespace logicker::core {
       typedef typename core::condition_instance<field_type, topology> condition_instance;
       typedef typename std::shared_ptr<condition_instance> condition_instance_p;
 
-      puzzle_instance(typename topology::topology_size_t size, const field_type& field_type);
+      puzzle_instance(const topology& topology, const field_type& field_type);
       grid_type get_grid() const;
       grid_type& get_grid();
       std::vector<condition_instance_p>& get_condition_instances() const;
@@ -26,7 +26,7 @@ namespace logicker::core {
   };
 
   template<class PuzzleType>
-  puzzle_instance<PuzzleType>::puzzle_instance(typename topology::topology_size_t size, const field_type& field_type) : grid_ { size, field_type } {
+  puzzle_instance<PuzzleType>::puzzle_instance(const topology& topology, const field_type& field_type) : grid_ { topology, field_type } {
     init_grid_conds();
   }
 
