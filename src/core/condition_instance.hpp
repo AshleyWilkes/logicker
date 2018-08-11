@@ -25,58 +25,58 @@
 //some preprocessing should be present in this (most importantly excluding empties,
 //i.e. not putting empties into values array)
 namespace logicker::core {
-  template<class FieldType, class Topology>
+  template<class FieldType>
   class simple_condition_instance;
 
-  template<class FieldType, class Topology>
+  template<class FieldType>
   class condition_instance {
     public:
       virtual bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const = 0;
-      virtual boost::optional<typename grid<FieldType, Topology>::deduction_type>
-        try_to_find_deduction(const grid<FieldType, Topology>& grid) const = 0;
-      virtual std::vector<simple_condition_instance<FieldType, Topology>>
+      virtual boost::optional<typename field_container<FieldType>::deduction_type>
+        try_to_find_deduction(const field_container<FieldType>& field_container) const = 0;
+      virtual std::vector<simple_condition_instance<FieldType>>
         get_as_simple_instances_vector() const = 0;
       
       static std::unique_ptr<condition_instance>
       create_instance(std::string, const std::vector<int>& fields);
   };
 
-  template<class FieldType, class Topology>
-  class simple_condition_instance : public condition_instance<FieldType, Topology> {
+  template<class FieldType>
+  class simple_condition_instance : public condition_instance<FieldType> {
     public:
       simple_condition_instance(const condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices);
 
       const std::vector<int>& get_field_indices() const { return fields_; }
       bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
-      boost::optional<typename grid<FieldType, Topology>::deduction_type>
-        try_to_find_deduction(const grid<FieldType, Topology>& grid) const override;
-      virtual std::vector<simple_condition_instance<FieldType, Topology>>
+      boost::optional<typename field_container<FieldType>::deduction_type>
+        try_to_find_deduction(const field_container<FieldType>& field_container) const override;
+      virtual std::vector<simple_condition_instance<FieldType>>
         get_as_simple_instances_vector() const override;
     private:
       condition<typename FieldType::value_type> cond_;
       std::vector<int> fields_;
   };
 
-  template<class FieldType, class Topology>
-  class composite_condition_instance : public condition_instance<FieldType, Topology> {
+  template<class FieldType>
+  class composite_condition_instance : public condition_instance<FieldType> {
     public:
-      void add(std::unique_ptr<condition_instance<FieldType, Topology>> part);
+      void add(std::unique_ptr<condition_instance<FieldType>> part);
 
       bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
-      boost::optional<typename grid<FieldType, Topology>::deduction_type>
-        try_to_find_deduction(const grid<FieldType, Topology>& grid) const override;
-      virtual std::vector<simple_condition_instance<FieldType, Topology>>
+      boost::optional<typename field_container<FieldType>::deduction_type>
+        try_to_find_deduction(const field_container<FieldType>& field_container) const override;
+      virtual std::vector<simple_condition_instance<FieldType>>
         get_as_simple_instances_vector() const override;
     private:
-      std::vector<std::shared_ptr<condition_instance<FieldType, Topology>>> parts_;
+      std::vector<std::shared_ptr<condition_instance<FieldType>>> parts_;
   };
 
-  template<class FieldType, class Topology>
-  simple_condition_instance<FieldType, Topology>::simple_condition_instance(const condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices) : cond_{cond}, fields_{field_indices} {}
+  template<class FieldType>
+  simple_condition_instance<FieldType>::simple_condition_instance(const condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices) : cond_{cond}, fields_{field_indices} {}
 
-  template<class FieldType, class Topology>
+  template<class FieldType>
   bool 
-  simple_condition_instance<FieldType, Topology>::is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const {
+  simple_condition_instance<FieldType>::is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const {
     std::vector<typename FieldType::value_type> cond_vals;
     for (auto index : fields_) {
       cond_vals.push_back(values.at(index));
@@ -84,40 +84,40 @@ namespace logicker::core {
     return cond_.is_satisfied_by(cond_vals);
   }
 
-  template<class FieldType, class Topology>
-  boost::optional<typename grid<FieldType, Topology>::deduction_type>
-  simple_condition_instance<FieldType, Topology>::try_to_find_deduction(const grid<FieldType, Topology>& grid) const {
+  template<class FieldType>
+  boost::optional<typename field_container<FieldType>::deduction_type>
+  simple_condition_instance<FieldType>::try_to_find_deduction(const field_container<FieldType>& field_container) const {
     if (fields_.size() != 2) {
       throw "simple_condition_instance::try_to_find_deduction -- only 2 fields deductioning impled";
     }
     //tady predpokladam, ze kdyz je field is_set, tak obsahuje hodnotu, ono vubec integer field je na pikacu
-    field<FieldType> f1 = grid.get_field(fields_[0]);
-    field<FieldType> f2 = grid.get_field(fields_[1]);
+    field<FieldType> f1 = field_container.get_field(fields_[0]);
+    field<FieldType> f2 = field_container.get_field(fields_[1]);
     if (f1.is_set() && !f2.is_set() && f2.is_value_option(f1.get())) {
-      return typename grid<FieldType, Topology>::deduction_type { fields_[1], f1.get() };
+      return typename field_container<FieldType>::deduction_type { fields_[1], f1.get() };
     } else if (f2.is_set() && !f1.is_set() && f1.is_value_option(f2.get())) {
-      return typename grid<FieldType, Topology>::deduction_type { fields_[0], f2.get() };
+      return typename field_container<FieldType>::deduction_type { fields_[0], f2.get() };
     }
     return boost::none;
   }
 
-  template<class FieldType, class Topology>
-  std::vector<simple_condition_instance<FieldType, Topology>>
-  simple_condition_instance<FieldType, Topology>::get_as_simple_instances_vector() const {
-    std::vector<simple_condition_instance<FieldType, Topology>> result;
+  template<class FieldType>
+  std::vector<simple_condition_instance<FieldType>>
+  simple_condition_instance<FieldType>::get_as_simple_instances_vector() const {
+    std::vector<simple_condition_instance<FieldType>> result;
     result.push_back(*this);
     return result;
   }
 
-  template<class FieldType, class Topology>
+  template<class FieldType>
   void
-  composite_condition_instance<FieldType, Topology>::add(std::unique_ptr<condition_instance<FieldType, Topology>> part) {
+  composite_condition_instance<FieldType>::add(std::unique_ptr<condition_instance<FieldType>> part) {
     parts_.push_back(std::move(part));
   }
 
-  template<class FieldType, class Topology>
+  template<class FieldType>
   bool 
-  composite_condition_instance<FieldType, Topology>::is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const {
+  composite_condition_instance<FieldType>::is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const {
     for (auto it = parts_.begin(); it != parts_.end(); ++it) {
       if (! (*it)->is_satisfied_by(values)) {
         return false;
@@ -126,11 +126,11 @@ namespace logicker::core {
     return true;
   }
 
-  template<class FieldType, class Topology>
-  boost::optional<typename grid<FieldType, Topology>::deduction_type>
-  composite_condition_instance<FieldType, Topology>::try_to_find_deduction(const grid<FieldType, Topology>& grid) const {
+  template<class FieldType>
+  boost::optional<typename field_container<FieldType>::deduction_type>
+  composite_condition_instance<FieldType>::try_to_find_deduction(const field_container<FieldType>& field_container) const {
     for (auto it = parts_.begin(); it != parts_.end(); ++it) {
-      auto potential_deduction = (*it)->try_to_find_deduction(grid);
+      auto potential_deduction = (*it)->try_to_find_deduction(field_container);
       if (potential_deduction) {
         return potential_deduction;
       }
@@ -138,10 +138,10 @@ namespace logicker::core {
     return boost::none;
   }
 
-  template<class FieldType, class Topology>
-  std::vector<simple_condition_instance<FieldType, Topology>>
-  composite_condition_instance<FieldType, Topology>::get_as_simple_instances_vector() const {
-    std::vector<simple_condition_instance<FieldType, Topology>> result;
+  template<class FieldType>
+  std::vector<simple_condition_instance<FieldType>>
+  composite_condition_instance<FieldType>::get_as_simple_instances_vector() const {
+    std::vector<simple_condition_instance<FieldType>> result;
     for ( auto& part : parts_ ) {
       auto part_result = (*part).get_as_simple_instances_vector();
       result.insert( result.end(), part_result.begin(), part_result.end() );
@@ -149,16 +149,16 @@ namespace logicker::core {
     return result;
   }
 
-  template<class FieldType, class Topology>
-  std::unique_ptr<condition_instance<FieldType, Topology>>
-  condition_instance<FieldType, Topology>::create_instance(core::ConditionDescription desc, const std::vector<int>& fields) {
-    std::unique_ptr<composite_condition_instance<FieldType, Topology>> result = std::make_unique<composite_condition_instance<FieldType, Topology>>();
+  template<class FieldType>
+  std::unique_ptr<condition_instance<FieldType>>
+  condition_instance<FieldType>::create_instance(core::ConditionDescription desc, const std::vector<int>& fields) {
+    std::unique_ptr<composite_condition_instance<FieldType>> result = std::make_unique<composite_condition_instance<FieldType>>();
     if (desc == "EachValueOnce") {
       int fields_size = fields.size();
       for (int i = 0; i < fields_size; ++i) {
         for (int j = i + 1; j < fields_size; ++j) {
           std::vector<int> temp_fields{ fields.at(i), fields.at(j) };
-          auto temp_instance = std::make_unique<simple_condition_instance<FieldType, Topology>>( neq, temp_fields );
+          auto temp_instance = std::make_unique<simple_condition_instance<FieldType>>( neq, temp_fields );
           //result.add(std::make_unique<simple_condition_instance<FieldType, Topology>>(temp_instance));
           result->add(std::move(temp_instance));
         }

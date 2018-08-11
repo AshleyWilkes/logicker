@@ -9,14 +9,14 @@ namespace logicker::core {
       typedef typename topology::coords coords_type;
       typedef typename core::grid<field_type, topology> grid_type;
       using deduction_type = typename grid_type::deduction_type;
-      typedef typename core::condition_instance<field_type, topology> condition_instance;
+      typedef typename core::condition_instance<field_type> condition_instance;
       typedef typename std::shared_ptr<condition_instance> condition_instance_p;
 
       puzzle_instance(const topology& topology, const field_type& field_type);
       grid_type get_grid() const;
       grid_type& get_grid();
       std::vector<condition_instance_p>& get_condition_instances() const;
-      std::vector<simple_condition_instance<field_type, topology>> get_simple_condition_instances() const;
+      std::vector<simple_condition_instance<field_type>> get_simple_condition_instances() const;
     private:
       mutable std::vector<condition_instance_p> grid_conds_;
       mutable grid_type grid_;
@@ -49,13 +49,13 @@ namespace logicker::core {
   }
 
   template<class PuzzleType>
-  std::vector<simple_condition_instance<typename PuzzleType::field_type, typename PuzzleType::topology>>
+  std::vector<simple_condition_instance<typename PuzzleType::field_type>>
   puzzle_instance<PuzzleType>::get_simple_condition_instances() const {
     //!!THIS IMPLEMENTATION requires rectangle and condition_instance be
     //moveable, i.e. not have const members!!
-    std::vector<simple_condition_instance<field_type, topology>> result;
+    std::vector<simple_condition_instance<field_type>> result;
     for ( auto& grid_cond : grid_conds_ ) {
-      std::vector<simple_condition_instance<field_type, topology>> grid_cond_simples = (*grid_cond).get_as_simple_instances_vector();
+      std::vector<simple_condition_instance<field_type>> grid_cond_simples = (*grid_cond).get_as_simple_instances_vector();
       result.insert( result.end(), grid_cond_simples.begin(), grid_cond_simples.end() );
     }
     return result;

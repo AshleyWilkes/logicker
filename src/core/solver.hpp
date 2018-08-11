@@ -9,11 +9,11 @@ namespace logicker::core {
       typedef typename PuzzleInstanceType::coords_type coords_type;
       typedef typename PuzzleInstanceType::field_type field_type;
       typedef typename PuzzleInstanceType::topology topology_type;
-      typedef simple_condition_instance<field_type, topology_type> condition_type;
+      typedef simple_condition_instance<field_type> condition_type;
       using deduction_type = typename PuzzleInstanceType::deduction_type;
       using grid_type = typename PuzzleInstanceType::grid_type;
 
-      solver_condition_instance(std::vector<int> field_indices, std::vector<simple_condition_instance<field_type, topology_type>> conds) : fields_set_{ field_indices.begin(), field_indices.end() }, conds_vec_{ conds } {}
+      solver_condition_instance(std::vector<int> field_indices, std::vector<simple_condition_instance<field_type>> conds) : fields_set_{ field_indices.begin(), field_indices.end() }, conds_vec_{ conds } {}
       //void add(const simple_condition_instance<field_type, topology_type>& sci) { conds_set_.insert( sci ); }
       //
       //pokud vratis boost::none, nastav processed nebo exhausted na true
@@ -28,7 +28,7 @@ namespace logicker::core {
       static bool compare_conditions(const solver_condition_instance<PuzzleInstanceType>& lhs, const solver_condition_instance<PuzzleInstanceType>& rhs);
     private:
       std::set<int> fields_set_;
-      std::vector<simple_condition_instance<field_type, topology_type>> conds_vec_;
+      std::vector<simple_condition_instance<field_type>> conds_vec_;
       bool processed_{ false }, exhausted_{ false };
   };
 
@@ -84,7 +84,7 @@ namespace logicker::core {
     private:
       boost::optional<solver_condition_instance<PuzzleInstanceType>> solver_condition_instance_for_field_set(std::set<typename PuzzleInstanceType::coords_type> field_set);
 
-      std::vector<simple_condition_instance<typename PuzzleInstanceType::field_type, typename PuzzleInstanceType::topology>> simple_instances_;
+      std::vector<simple_condition_instance<typename PuzzleInstanceType::field_type>> simple_instances_;
   };
 
   /*template<class PuzzleInstanceType>
@@ -159,7 +159,7 @@ namespace logicker::core {
     //anebo do condition_instance.hpp pripsat mechanismus, jak solver_instance
     //generovat rucne.
     for ( auto sci : simple_instances_ ) {
-      std::vector<simple_condition_instance<field_type, topology_type>> conds;
+      std::vector<simple_condition_instance<field_type>> conds;
       conds.push_back( sci );
       solver_instances.push_back( solver_condition_instance<PuzzleInstanceType>( sci.get_field_indices(), conds ));
     }
