@@ -9,7 +9,8 @@ namespace logicker::core {
   template<class FieldType, class Topology>
   class elimination_deduction {
     public:
-      const typename Topology::coords coords_;
+      //const typename Topology::coords coords_;
+      int field_index_;
       const typename FieldType::value_type value_;
   };
 
@@ -152,7 +153,7 @@ namespace logicker::core {
   template<class FieldType, class Topology>
   void
   grid<FieldType, Topology>::perform_deduction(elimination_deduction<FieldType, Topology> deduction) {
-    auto& field = get_field( deduction.coords_ );
+    auto& field = get_field( deduction.field_index_ );
     field.eliminate( deduction.value_ );
   }
 

@@ -75,10 +75,13 @@ namespace logicker::core {
   void
   puzzle_instance<PuzzleType>::init_grid_conds(const puzzle::condition_description& cond_desc) const {
     for (const auto& group : grid_.topology().get_all_coords_groups(cond_desc.first)) {
+      auto group_coords = grid_.topology().get_coords_in_group(group);
+      std::vector<int> field_indices;
+      for (size_t i = 0 ; i < group_coords.size(); ++i) {
+        field_indices.push_back( group_coords.at(i).index() );
+      }
       grid_conds_.push_back(
-          condition_instance::create_instance(
-              cond_desc.second, 
-              grid_.topology().get_coords_in_group(group)));
+          condition_instance::create_instance( cond_desc.second, field_indices));
     }
   }
 }

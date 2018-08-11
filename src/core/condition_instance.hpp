@@ -38,15 +38,15 @@ namespace logicker::core {
         get_as_simple_instances_vector() const = 0;
       
       static std::unique_ptr<condition_instance>
-      create_instance(std::string, const std::vector<typename Topology::coords>& fields);
+      create_instance(std::string, const std::vector<int>& fields);
   };
 
   template<class FieldType, class Topology>
   class simple_condition_instance : public condition_instance<FieldType, Topology> {
     public:
-      simple_condition_instance(const condition<typename FieldType::value_type>& cond, const std::vector<typename Topology::coords>& fields);
+      simple_condition_instance(const condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices);
 
-      const std::vector<typename Topology::coords>& get_coords() const { return fields_; }
+      const std::vector<int>& get_field_indices() const { return fields_; }
       bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
       boost::optional<typename grid<FieldType, Topology>::deduction_type>
         try_to_find_deduction(const grid<FieldType, Topology>& grid) const override;
@@ -54,7 +54,7 @@ namespace logicker::core {
         get_as_simple_instances_vector() const override;
     private:
       condition<typename FieldType::value_type> cond_;
-      std::vector<typename Topology::coords> fields_;
+      std::vector<int> fields_;
   };
 
   template<class FieldType, class Topology>
@@ -72,14 +72,14 @@ namespace logicker::core {
   };
 
   template<class FieldType, class Topology>
-  simple_condition_instance<FieldType, Topology>::simple_condition_instance(const condition<typename FieldType::value_type>& cond, const std::vector<typename Topology::coords>& fields) : cond_{cond}, fields_{fields} {}
+  simple_condition_instance<FieldType, Topology>::simple_condition_instance(const condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices) : cond_{cond}, fields_{field_indices} {}
 
   template<class FieldType, class Topology>
   bool 
   simple_condition_instance<FieldType, Topology>::is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const {
     std::vector<typename FieldType::value_type> cond_vals;
-    for (auto coord : fields_) {
-      cond_vals.push_back(values.at(coord.index()));
+    for (auto index : fields_) {
+      cond_vals.push_back(values.at(index));
     }
     return cond_.is_satisfied_by(cond_vals);
   }
@@ -151,13 +151,13 @@ namespace logicker::core {
 
   template<class FieldType, class Topology>
   std::unique_ptr<condition_instance<FieldType, Topology>>
-  condition_instance<FieldType, Topology>::create_instance(core::ConditionDescription desc, const std::vector<typename Topology::coords>& fields) {
+  condition_instance<FieldType, Topology>::create_instance(core::ConditionDescription desc, const std::vector<int>& fields) {
     std::unique_ptr<composite_condition_instance<FieldType, Topology>> result = std::make_unique<composite_condition_instance<FieldType, Topology>>();
     if (desc == "EachValueOnce") {
       int fields_size = fields.size();
       for (int i = 0; i < fields_size; ++i) {
         for (int j = i + 1; j < fields_size; ++j) {
-          std::vector<typename Topology::coords> temp_fields{ fields.at(i), fields.at(j) };
+          std::vector<int> temp_fields{ fields.at(i), fields.at(j) };
           auto temp_instance = std::make_unique<simple_condition_instance<FieldType, Topology>>( neq, temp_fields );
           //result.add(std::make_unique<simple_condition_instance<FieldType, Topology>>(temp_instance));
           result->add(std::move(temp_instance));

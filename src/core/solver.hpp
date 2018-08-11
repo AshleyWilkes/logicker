@@ -13,7 +13,7 @@ namespace logicker::core {
       using deduction_type = typename PuzzleInstanceType::deduction_type;
       using grid_type = typename PuzzleInstanceType::grid_type;
 
-      solver_condition_instance(std::vector<coords_type> coords, std::vector<simple_condition_instance<field_type, topology_type>> conds) : coords_set_{ coords.begin(), coords.end() }, conds_vec_{ conds } {}
+      solver_condition_instance(std::vector<int> field_indices, std::vector<simple_condition_instance<field_type, topology_type>> conds) : fields_set_{ field_indices.begin(), field_indices.end() }, conds_vec_{ conds } {}
       //void add(const simple_condition_instance<field_type, topology_type>& sci) { conds_set_.insert( sci ); }
       //
       //pokud vratis boost::none, nastav processed nebo exhausted na true
@@ -21,13 +21,13 @@ namespace logicker::core {
 
       bool is_processed() const { return processed_; }
       bool is_exhausted() const { return exhausted_; }
-      size_t coords_set_size() const { return coords_set_.size(); }
-      std::set<coords_type> coords_set() { return coords_set_; }
+      size_t fields_set_size() const { return fields_set_.size(); }
+      std::set<int> fields_set() { return fields_set_; }
       void set_unprocessed() { processed_ = false; }
 
       static bool compare_conditions(const solver_condition_instance<PuzzleInstanceType>& lhs, const solver_condition_instance<PuzzleInstanceType>& rhs);
     private:
-      std::set<coords_type> coords_set_;
+      std::set<int> fields_set_;
       std::vector<simple_condition_instance<field_type, topology_type>> conds_vec_;
       bool processed_{ false }, exhausted_{ false };
   };
@@ -51,7 +51,7 @@ namespace logicker::core {
     if ( lhs.is_processed() || lhs.is_exhausted() ) return false;
     if ( rhs.is_processed() || rhs.is_exhausted() ) return true;
     //prozatim pouzivam pro jednoduchost pouze primarni kriterium
-    return lhs.coords_set_size() < rhs.coords_set_size();
+    return lhs.fields_set_size() < rhs.fields_set_size();
   }
 
   template<class PuzzleInstanceType>
@@ -121,7 +121,7 @@ namespace logicker::core {
         working_grid_.perform_deduction( deduction );
         //wake up appropriate solver_instances
         for ( auto it = cond_insts_.begin(); it != cond_insts_.end(); ++it ) {
-          if ( it->coords_set().count( deduction.coords_ ) == 1) {
+          if ( it->fields_set().count( deduction.field_index_ ) == 1) {
             it->set_unprocessed();
           }
         }
@@ -161,7 +161,7 @@ namespace logicker::core {
     for ( auto sci : simple_instances_ ) {
       std::vector<simple_condition_instance<field_type, topology_type>> conds;
       conds.push_back( sci );
-      solver_instances.push_back( solver_condition_instance<PuzzleInstanceType>( sci.get_coords(), conds ));
+      solver_instances.push_back( solver_condition_instance<PuzzleInstanceType>( sci.get_field_indices(), conds ));
     }
     return solver<PuzzleInstanceType>{ assignment, assignment.get_grid(), solver_instances };
   }
