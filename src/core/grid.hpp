@@ -6,24 +6,19 @@
 
 namespace logicker::core {
   //toto bude potomek abstraktniho typu deduction...
-  template<class FieldType, class Topology>
+  //template<class FieldType, class Topology>
+  template<class FieldType>
   class elimination_deduction {
     public:
-      //const typename Topology::coords coords_;
       int field_index_;
       const typename FieldType::value_type value_;
   };
-
-  template<class FieldType, class Topology>
-  class grid;
-
-  template<class FieldType, class Topology>
-  std::ostream& operator<<(std::ostream& os, const grid<FieldType, Topology>& grid);
 
   template<class FieldType>
   class field_container {
     public:
       typedef typename FieldType::value_type value_type;
+      typedef elimination_deduction<FieldType> deduction_type;
       field_container(int fields_count, const FieldType& field_type);
 
       field<FieldType>& get_field(int index);
@@ -35,9 +30,17 @@ namespace logicker::core {
       //each field must contain exactly 1 value, this is not nearly general enough
       //ok for now
       std::vector<value_type> get_values();
+
+      void perform_deduction(elimination_deduction<FieldType> deduction);
     private:
       std::vector<field<FieldType>> fields_;
   };
+
+  template<class FieldType, class Topology>
+  class grid;
+
+  template<class FieldType, class Topology>
+  std::ostream& operator<<(std::ostream& os, const grid<FieldType, Topology>& grid);
 
   template<class FieldType, class Topology>
   class grid : public field_container<FieldType> {
@@ -46,20 +49,16 @@ namespace logicker::core {
       using size_type = typename Topology::topology_size_t;
       typedef typename Topology::coords coords_type;
       typedef typename FieldType::value_type value_type;
-      typedef elimination_deduction<FieldType, Topology> deduction_type;
-
-      using field_container<FieldType>::get_field;
 
       grid(const Topology& topology, const FieldType& field_type);
 
+      using field_container<FieldType>::get_field;
       field<FieldType>& get_field(coords_type coords);
       const field<FieldType>& get_field(coords_type coords) const;
 
       void set_value(coords_type coords, value_type value);
 
       topology_type topology() const { return topology_; }
-
-      void perform_deduction(elimination_deduction<FieldType, Topology> deduction);
       
       friend std::ostream& operator<< <>(std::ostream& os, const grid<FieldType, Topology>& grid);
     private:
@@ -109,6 +108,13 @@ namespace logicker::core {
     return result;
   }
 
+  template<class FieldType>
+  void
+  field_container<FieldType>::perform_deduction(elimination_deduction<FieldType> deduction) {
+    auto& field = get_field( deduction.field_index_ );
+    field.eliminate( deduction.value_ );
+  }
+
   template<class FieldType, class Topology>
   grid<FieldType, Topology>::grid(const Topology& topology, const FieldType& field_type) : field_container<FieldType>{topology.fields_count(), field_type}, topology_{topology} {}
 
@@ -149,13 +155,6 @@ namespace logicker::core {
     }
     return result;
   }*/
-
-  template<class FieldType, class Topology>
-  void
-  grid<FieldType, Topology>::perform_deduction(elimination_deduction<FieldType, Topology> deduction) {
-    auto& field = get_field( deduction.field_index_ );
-    field.eliminate( deduction.value_ );
-  }
 
   template<class FieldType, class Topology>
   std::ostream&
