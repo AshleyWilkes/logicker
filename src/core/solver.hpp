@@ -18,6 +18,7 @@ namespace logicker::core {
       //
       //pokud vratis boost::none, nastav processed nebo exhausted na true
       boost::optional<deduction_type> try_to_find_deduction(grid_type grid);
+      boost::optional<deduction_type> try_to_find_deduction(simple_condition_instance<field_type> cond, grid_type grid);
 
       bool is_processed() const { return processed_; }
       bool is_exhausted() const { return exhausted_; }
@@ -36,7 +37,7 @@ namespace logicker::core {
   boost::optional<typename PuzzleInstanceType::deduction_type>
   solver_condition_instance<PuzzleInstanceType>::try_to_find_deduction(typename PuzzleInstanceType::grid_type grid) {
     for ( auto simple_cond : conds_vec_ ) {
-      auto deduction_opt = simple_cond.try_to_find_deduction( grid );
+      auto deduction_opt = try_to_find_deduction( simple_cond, grid );
       if ( deduction_opt ) {
         return deduction_opt;
       }
@@ -45,6 +46,49 @@ namespace logicker::core {
     return boost::none;
   }
 
+  //ma byt rozdeleno na dve casti
+  //prvni cast vybere z vectoru policka odpovidajici indexum, ktere se conditiony
+  //tykaji
+  //
+  //druha cast na nich provede prislusne dedukce
+  //
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  /*template<class FieldType>
+  boost::optional<typename field_container<FieldType>::deduction_type>
+  simple_condition_instance<FieldType>::try_to_find_deduction(const field_container<FieldType>& field_container) const {
+    if (fields_.size() != 2) {
+      throw "simple_condition_instance::try_to_find_deduction -- only 2 fields deductioning impled";
+    }
+    //tady predpokladam, ze kdyz je field is_set, tak obsahuje hodnotu, ono vubec integer field je na pikacu
+    field<FieldType> f1 = field_container.get_field(fields_[0]);
+    field<FieldType> f2 = field_container.get_field(fields_[1]);
+    if (f1.is_set() && !f2.is_set() && f2.is_value_option(f1.get())) {
+      return typename field_container<FieldType>::deduction_type { fields_[1], f1.get() };
+    } else if (f2.is_set() && !f1.is_set() && f1.is_value_option(f2.get())) {
+      return typename field_container<FieldType>::deduction_type { fields_[0], f2.get() };
+    }
+    return boost::none;
+  }*/
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  template<class PuzzleInstanceType>
+  boost::optional<typename PuzzleInstanceType::deduction_type>
+  solver_condition_instance<PuzzleInstanceType>::try_to_find_deduction(simple_condition_instance<field_type> cond, grid_type grid) {
+    auto indices = cond.get_field_indices();
+    if (indices.size() != 2) {
+      throw "solver_condition_instance::try_to_find_deduction -- only 2 fields deductioning impled";
+    }
+    //tady predpokladam, ze kdyz je field is_set, tak obsahuje hodnotu, ono vubec integer field je na pikacu
+    field<field_type> f1 = grid.get_field(indices[0]);
+    field<field_type> f2 = grid.get_field(indices[1]);
+    if (f1.is_set() && !f2.is_set() && f2.is_value_option(f1.get())) {
+      return typename field_container<field_type>::deduction_type { indices[1], f1.get() };
+    } else if (f2.is_set() && !f1.is_set() && f1.is_value_option(f2.get())) {
+      return typename field_container<field_type>::deduction_type { indices[0], f2.get() };
+    }
+    return boost::none;
+  }
+  
   template<class PuzzleInstanceType>
   bool
   solver_condition_instance<PuzzleInstanceType>::compare_conditions(const solver_condition_instance<PuzzleInstanceType>& lhs, const solver_condition_instance<PuzzleInstanceType>& rhs) {
@@ -66,7 +110,6 @@ namespace logicker::core {
       solver(PuzzleInstanceType assignment, grid_type working_grid, std::vector<solver_condition_instance<PuzzleInstanceType>> solver_condition_instances) : assign_{ assignment }, working_grid_{ working_grid }, cond_insts_ { solver_condition_instances } {}
       typename PuzzleInstanceType::grid_type get_solution() const;
     private:
-      void init_cond_insts() const;
       solver_condition_instance<PuzzleInstanceType>& pick_a_condition() const;
 
       const PuzzleInstanceType assign_;
@@ -153,10 +196,10 @@ namespace logicker::core {
     //
     //Zda se, ze toto (rozhodnout, pro ktere skupiny policek vytvaret solver_instance)
     //je velmi tezky problem, nechavam ted byt a jdu nejjednodussi cestou:
-    //vytvorim jeden solver_instance pro kazdou elementary_instance a jinak  zatim
+    //vytvorim jeden solver_instance pro kazdou elementary_instance a jinak zatim
     //nic. Jako dalsi krok se jevi bud dotvorit teorii natolik, ze by se sem
     //dal opravdu pripsat generator solver_instanci, jak jsem to chtel udelat,
-    //anebo do condition_instance.hpp pripsat mechanismus, jak solver_instance
+    //anebo ??do condition_instance.hpp?? pripsat mechanismus, jak solver_instance
     //generovat rucne.
     for ( auto sci : simple_instances_ ) {
       std::vector<simple_condition_instance<field_type>> conds;
@@ -166,53 +209,8 @@ namespace logicker::core {
     return solver<PuzzleInstanceType>{ assignment, assignment.get_grid(), solver_instances };
   }
 
-  template<class PuzzleInstanceType>
-  void
-  solver<PuzzleInstanceType>::init_cond_insts() const {
-    //
-    //nejdriv potrebuju sebrat vsechny simple_condition_instance, ktere existuji
-    //
-    //z nich si postavim deducing_instance:
-    //  ??mozna umi nahradit si interne rozhodnute policko primo za hodnotu v nem??
-    //  urcite umi hledat backtrackem dedukce: dvojici [policko, hodnota], o ktere
-    //    se da rozhodnout, ze nemuze byt spravne
-    //  bool processed, exhausted;
-    //  int num_fields;//primarni porovnavaci kriterium
-    //
-    //
-    //  int state_space_size;//sekundarni porovnavaci kriterium
-    //novy, lepsi postup:
-    //prochazim vsechny podmnoziny mnoziny vsech policek
-    //pro kazdou podmnozinu rozhodnu, zda zaslouzi mit deducing_instanci
-    //  ??(1) existuje simple_instance s presne touto mnozinou policek??
-    //  pro kazde policko
-    //    ??(2) kolik simple_instanci, ktere obsahuji toto policko, se vejde do teto mnoziny??
-    //pokud ano, vytvorim deducing_instanci a umistim do ni (odkazy na) vsechny simple_instance, ktere do ni patri
-    //  (3) ktere simple_instance se vejdou do teto mnoziny
-    //
-    //Takze se nam to zuzuje takto:
-    //-- je treba zkoumat vlastnosti mnozin policek, a to dva druhy vlastnosti
-    //--    je tato mnozina stejna jako jina mnozina (pro bod 1)
-    //--    je tato mnozina podmnozinou jine mnoziny (pro body 2, 3)
-    //-- odpovedi na obe otazky urcite umi poskytnout std container set<coords>
-    //
-    //Takze implementace teto metody obsahuje tyto kroky:
-    //1) sebrat informace o vsech simple_conditionach do datove struktury
-    //    to udela assign_.get_simple_condition_instances();
-    //2) generovat podmnoziny mnoziny vsech policek
-    //  3) pro kazdou podmnozinu vyhodnotit podminku (1), tj. projit vsechny simply a pro kady se podivat, jestli nahodou nema mnozinu stejnou jako aktualni podmnozina
-    //  4) pokud (1) neplati, pro kazde policko z podmnoziny
-    //    5) 
-    //
-    /*std::map<std::set<coords_type>, solver_condition_instance<PuzzleInstanceType>> temp_insts_;
-    //??iterate over simple_condition_instances in assign_??
-    for ( const simple_condition_instance<field_type, topology_type>& sci : assign_.get_simple_condition_instances() ) {
-      auto& sci_coords_vec = sci.get_coords();
-      std::set<coords_type> coords{ sci_coords_vec.begin(), sci_coords_vec.end() };
-      temp_insts_[coords].add( sci );
-      std::cout << "Iteration over sci\n";
-    }*/
-  }
+//chci mit jednu solver_condition_instanco pro kazdou skupinu policek,
+//pro kterou to ma smysl (viz diskuse
 
   template<class PuzzleInstanceType>
   solver_condition_instance<PuzzleInstanceType>&

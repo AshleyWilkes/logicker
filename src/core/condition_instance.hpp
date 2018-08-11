@@ -32,13 +32,11 @@ namespace logicker::core {
   class condition_instance {
     public:
       virtual bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const = 0;
-      virtual boost::optional<typename field_container<FieldType>::deduction_type>
-        try_to_find_deduction(const field_container<FieldType>& field_container) const = 0;
       virtual std::vector<simple_condition_instance<FieldType>>
         get_as_simple_instances_vector() const = 0;
       
       static std::unique_ptr<condition_instance>
-      create_instance(std::string, const std::vector<int>& fields);
+      create_instance(std::string, const std::vector<int>& field_indices);
   };
 
   template<class FieldType>
@@ -48,8 +46,6 @@ namespace logicker::core {
 
       const std::vector<int>& get_field_indices() const { return fields_; }
       bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
-      boost::optional<typename field_container<FieldType>::deduction_type>
-        try_to_find_deduction(const field_container<FieldType>& field_container) const override;
       virtual std::vector<simple_condition_instance<FieldType>>
         get_as_simple_instances_vector() const override;
     private:
@@ -63,8 +59,6 @@ namespace logicker::core {
       void add(std::unique_ptr<condition_instance<FieldType>> part);
 
       bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
-      boost::optional<typename field_container<FieldType>::deduction_type>
-        try_to_find_deduction(const field_container<FieldType>& field_container) const override;
       virtual std::vector<simple_condition_instance<FieldType>>
         get_as_simple_instances_vector() const override;
     private:
@@ -82,23 +76,6 @@ namespace logicker::core {
       cond_vals.push_back(values.at(index));
     }
     return cond_.is_satisfied_by(cond_vals);
-  }
-
-  template<class FieldType>
-  boost::optional<typename field_container<FieldType>::deduction_type>
-  simple_condition_instance<FieldType>::try_to_find_deduction(const field_container<FieldType>& field_container) const {
-    if (fields_.size() != 2) {
-      throw "simple_condition_instance::try_to_find_deduction -- only 2 fields deductioning impled";
-    }
-    //tady predpokladam, ze kdyz je field is_set, tak obsahuje hodnotu, ono vubec integer field je na pikacu
-    field<FieldType> f1 = field_container.get_field(fields_[0]);
-    field<FieldType> f2 = field_container.get_field(fields_[1]);
-    if (f1.is_set() && !f2.is_set() && f2.is_value_option(f1.get())) {
-      return typename field_container<FieldType>::deduction_type { fields_[1], f1.get() };
-    } else if (f2.is_set() && !f1.is_set() && f1.is_value_option(f2.get())) {
-      return typename field_container<FieldType>::deduction_type { fields_[0], f2.get() };
-    }
-    return boost::none;
   }
 
   template<class FieldType>
@@ -127,18 +104,6 @@ namespace logicker::core {
   }
 
   template<class FieldType>
-  boost::optional<typename field_container<FieldType>::deduction_type>
-  composite_condition_instance<FieldType>::try_to_find_deduction(const field_container<FieldType>& field_container) const {
-    for (auto it = parts_.begin(); it != parts_.end(); ++it) {
-      auto potential_deduction = (*it)->try_to_find_deduction(field_container);
-      if (potential_deduction) {
-        return potential_deduction;
-      }
-    }
-    return boost::none;
-  }
-
-  template<class FieldType>
   std::vector<simple_condition_instance<FieldType>>
   composite_condition_instance<FieldType>::get_as_simple_instances_vector() const {
     std::vector<simple_condition_instance<FieldType>> result;
@@ -151,16 +116,13 @@ namespace logicker::core {
 
   template<class FieldType>
   std::unique_ptr<condition_instance<FieldType>>
-  condition_instance<FieldType>::create_instance(core::ConditionDescription desc, const std::vector<int>& fields) {
+  condition_instance<FieldType>::create_instance(core::ConditionDescription desc, const std::vector<int>& field_indices) {
     std::unique_ptr<composite_condition_instance<FieldType>> result = std::make_unique<composite_condition_instance<FieldType>>();
     if (desc == "EachValueOnce") {
-      int fields_size = fields.size();
-      for (int i = 0; i < fields_size; ++i) {
-        for (int j = i + 1; j < fields_size; ++j) {
-          std::vector<int> temp_fields{ fields.at(i), fields.at(j) };
-          auto temp_instance = std::make_unique<simple_condition_instance<FieldType>>( neq, temp_fields );
-          //result.add(std::make_unique<simple_condition_instance<FieldType, Topology>>(temp_instance));
-          result->add(std::move(temp_instance));
+      for (size_t i = 0; i < field_indices.size(); ++i) {
+        for (size_t j = i + 1; j < field_indices.size(); ++j) {
+          std::vector<int> temp{ field_indices.at(i), field_indices.at(j) };
+          result->add(std::make_unique<simple_condition_instance<FieldType>>( neq, temp ));
         }
       }
     } else {
