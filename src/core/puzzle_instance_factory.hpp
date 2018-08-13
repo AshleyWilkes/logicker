@@ -1,5 +1,5 @@
 #pragma once
-#include "integer_field_type.hpp"
+#include "elements/field_type/integer_field_type.hpp"
 #include "input_node.hpp"
 #include "puzzle_instance.hpp"
 

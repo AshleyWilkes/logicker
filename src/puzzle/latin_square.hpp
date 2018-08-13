@@ -1,9 +1,9 @@
 #pragma once
 #include "../core/condition_instance.hpp"
-#include "../core/integer_field_type.hpp"
+#include "../core/elements/field_type/integer_field_type.hpp"
 #include "../core/field.hpp"
 #include "../core/grid.hpp"
-#include "../core/rectangle.hpp"
+#include "../core/elements/topology/square.hpp"
 
 #include <algorithm>
 #include <vector>

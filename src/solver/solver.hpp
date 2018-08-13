@@ -1,5 +1,5 @@
 #pragma once
-#include "condition_instance.hpp"
+#include "../core/condition_instance.hpp"
 #include "deducer.hpp"
 #include <memory>
 #include <vector>
@@ -136,6 +136,23 @@ namespace logicker::core {
   //dal opravdu pripsat generator solver_instanci, jak jsem to chtel udelat,
   //anebo ??do condition_instance.hpp?? pripsat mechanismus, jak solver_instance
   //generovat rucne.
+  //
+  //Jde o to: kdo ma vedet, ktere skupiny policek maji mit solver_conditionu
+  //Dale: kdo ma vedet, jaka pomocna policka existuji
+  //
+  //Zavisi to na tom, jakej typ podminky pomocny policka pomahaj resit
+  //Takze to ma vedet solver v zavislosti na typu podminky
+  //
+  //Priklad: pismena (Easy as ABC) s prolukami
+  //pomocny policka obsahujou bool hodnotu, ktera urcuje, jestli je policko empty
+  //pokud proluky nejsou, maji vsechna pomocna policka hodnotu false
+  //
+  //v obou pripadech je podminka EachValueOnce
+  //ale jednou je to EachValueOnce, true (s prolukami)
+  //a jednou EachValueOnce, false (bez proluk) -- default
+  //
+  //tj jsou to ruzne podminky. pro zacatek implementuju podminku jako typ s typedefama
+  //stejne jako mam zatim implementovanej puzzle jako takovej
   template<class PuzzleInstanceType>
   solver<PuzzleInstanceType>
   solver_factory<PuzzleInstanceType>::create_solver_for_assignment(PuzzleInstanceType assignment) {
@@ -149,6 +166,9 @@ namespace logicker::core {
       std::vector<std::shared_ptr<deducer<int>>> deducers{ deducer_ptr };
       solver_instances.push_back( solver_condition_instance<PuzzleInstanceType>( sci.get_field_indices(), deducers ));
     }
+    //tady se predava assignment, kterej se momentalne vubec nepouziva
+    //predava se assignment.get_grid() jako working grid, coz je spatne
+    //working grid ma obsahovat navic pomocna policka
     return solver<PuzzleInstanceType>{ assignment, assignment.get_grid(), solver_instances };
   }
 }

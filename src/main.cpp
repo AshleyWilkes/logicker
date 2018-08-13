@@ -2,8 +2,8 @@
 #include "core/input_node.hpp"
 #include "core/puzzle_instance.hpp"
 #include "core/puzzle_instance_factory.hpp"
-#include "core/checker.hpp"
-#include "core/solver.hpp"
+#include "checker/checker.hpp"
+#include "solver/solver.hpp"
 #include <fstream>
 #include <iostream>
 #include <json/json.h>

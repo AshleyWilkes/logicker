@@ -21,6 +21,7 @@ namespace logicker::core {
       std::size_t size() const;
       int value_to_index(value_type value) const;
       value_type index_to_value(int index) const;
+      std::vector<value_type> values() const;
     private:
       std::vector<value_type> values_;
       std::map<value_type, int> indices_;
