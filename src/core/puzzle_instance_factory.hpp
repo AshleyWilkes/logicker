@@ -34,12 +34,17 @@ namespace logicker::core {
   puzzle_instance<PuzzleType>
   puzzle_instance_factory<PuzzleType>::create(const input_node_base& input) {
     const composite_input_node& cast_input = dynamic_cast<const composite_input_node&>( input );
+
     const int_input_node& size_input = cast_input.get<int_input_node>("Size");
     int size = size_input.get();
     typename puzzle_instance<PuzzleType>::field_type field_type{ 1, size }; 
     typename puzzle_instance<PuzzleType>::topology::topology_size_t topology_size{ size, size };
     typename puzzle_instance<PuzzleType>::topology topology{ topology_size };
+    //jako soucast volani konstruktor je volano vytvareni condition_instanci
     puzzle_instance<PuzzleType> result{ topology, field_type };
+
+    //instance je hotova, zbyva vyplnit policka, jejichz hodnoty jsou
+    //soucasti zadani (aka Givens)
     const composite_input_node& givens_input = cast_input.get<composite_input_node>("Givens");
     for (auto single_given_input : givens_input) {
       std::string single_given_name = single_given_input.first;

@@ -21,6 +21,11 @@ namespace logicker::core {
       void eliminate(value_type value);
       bool is_set() const;
       bool is_value_option(value_type value) const;
+      std::vector<value_type> available_values() const;
+
+      void clear();
+
+      bool is_subset_of(const field& other) const;
 
       friend std::ostream& operator<< <>(std::ostream& os, const field<FieldType>& field);
     private:
@@ -44,6 +49,9 @@ namespace logicker::core {
     //index should be ok here, value_to_index should throw if not
     if (options_.test(index)) {
       set_value_ = value;
+      options_.clear();
+      options_.resize( type_.size() );
+      options_.flip(index);
     } else {
       throw "value not available anymore";
     }
@@ -86,6 +94,20 @@ namespace logicker::core {
   bool
   field<FieldType>::is_value_option(value_type value) const {
     return options_.test(type_.value_to_index(value));
+  }
+
+  template<class FieldType>
+  void
+  field<FieldType>::clear() {
+    set_value_ = boost::none;
+    options_.clear();
+    options_.resize( type_.size(), true );
+  }
+
+  template<class FieldType>
+  bool
+  field<FieldType>::is_subset_of(const field& other) const {
+    return options_.is_subset_of( other.options_ );
   }
 
   template<class FieldType>
