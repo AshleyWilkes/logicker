@@ -33,4 +33,6 @@ namespace logicker::core::condition {
   };
 
   condition<int> neq {neq_lambda};
+
+  struct each_value_once_in_rows_and_cols{};
 }

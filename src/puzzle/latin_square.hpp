@@ -12,8 +12,10 @@ namespace logicker::puzzle {
   using condition_description = std::pair<std::vector<core::CoordsMetaGroup>, core::condition::ConditionDescription>;
   class latin_square {
     public:
-      typedef core::field_type<int> field_type;
+      using value_type = int;
+      using field_type = core::field_type<value_type>;
       using topology = core::square;
+      using condition = core::condition::each_value_once_in_rows_and_cols;
 
       static const std::vector<condition_description>& get_condition_descriptions();
   };
