@@ -2,7 +2,7 @@
 #include "core/input_node.hpp"
 #include "core/puzzle_instance.hpp"
 #include "core/puzzle_instance_factory.hpp"
-#include "checker/checker.hpp"
+#include "checker/checker_old.hpp"
 #include "solver/solver.hpp"
 #include <fstream>
 #include <iostream>
@@ -24,7 +24,7 @@ int main() {
   using logicker::core::puzzle_instance;
   using factory_t = logicker::core::puzzle_instance_factory<latin_square>;
   using puzzle_t = puzzle_instance<latin_square>;
-  using checker_t = logicker::core::checker<puzzle_t>;
+  using checker_t = logicker::core::old_checker::checker<puzzle_t>;
 
   //using base_input = logicker::core::input_node_base;
   //using int_input = logicker::core::int_input_node;
