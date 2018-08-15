@@ -13,7 +13,7 @@ namespace logicker::puzzle {
   class latin_square {
     public:
       typedef core::field_type<int> field_type;
-      typedef core::rectangle topology;
+      using topology = core::square;
 
       static const std::vector<condition_description>& get_condition_descriptions();
   };
