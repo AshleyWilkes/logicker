@@ -7,7 +7,7 @@
 //order doesn't matter) or nonlinear (e.g. square for e.g. loops))
 //
 //takze tady by mel byt mozna jeste dalsi type paramater, namely Topology
-namespace logicker::core {
+namespace logicker::core::condition {
   using ConditionDescription = std::string;
 
   template<class Value>

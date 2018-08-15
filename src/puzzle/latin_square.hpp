@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace logicker::puzzle {
-  using condition_description = std::pair<std::vector<core::CoordsMetaGroup>, core::ConditionDescription>;
+  using condition_description = std::pair<std::vector<core::CoordsMetaGroup>, core::condition::ConditionDescription>;
   class latin_square {
     public:
       typedef core::field_type<int> field_type;
