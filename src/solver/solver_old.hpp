@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-namespace logicker::core {
+namespace logicker::core::old_solver {
   template<class PuzzleInstanceType>
   class solver_condition_instance {
     public:

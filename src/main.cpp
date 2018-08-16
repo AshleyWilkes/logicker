@@ -4,7 +4,7 @@
 #include "core/puzzle_instance_factory.hpp"
 #include "checker/checker_old.hpp"
 #include "checker/checker.hpp"
-#include "solver/solver.hpp"
+#include "solver/solver_old.hpp"
 #include <fstream>
 #include <iostream>
 #include <json/json.h>
@@ -52,8 +52,8 @@ int main() {
 
   composite_input input{ "Input", input_json_value };
 
-  using solver_t = logicker::core::solver<puzzle_t>;
-  using solver_factory_t = logicker::core::solver_factory<puzzle_t>;
+  using solver_t = logicker::core::old_solver::solver<puzzle_t>;
+  using solver_factory_t = logicker::core::old_solver::solver_factory<puzzle_t>;
 
   puzzle_t puzzle_inst2 = factory_t::create( input );
   solver_t solver = solver_factory_t().create_solver_for_assignment( std::move(puzzle_inst2) );
