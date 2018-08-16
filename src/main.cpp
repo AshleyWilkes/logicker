@@ -3,6 +3,7 @@
 #include "core/puzzle_instance.hpp"
 #include "core/puzzle_instance_factory.hpp"
 #include "checker/checker_old.hpp"
+#include "checker/checker.hpp"
 #include "solver/solver.hpp"
 #include <fstream>
 #include <iostream>
@@ -64,9 +65,19 @@ int main() {
   std::cout << "Solved by vals: " << std::boolalpha << checker.is_solved_by(vals) << '\n';
 
   puzzle_t::grid_type sol_grid = checker.get_assignment_grid();
+  sol_grid.clear();
   sol_grid.set_values(vals);
 
   std::cout << "Solved by grid: " << std::boolalpha << checker.is_solved_by(sol_grid) <<'\n';
+
+  using new_checker_t = logicker::core::checker::checker<latin_square>;
+  new_checker_t checker3 = new_checker_t::create( input );
+  typename new_checker_t::grid_t sol_grid3 = checker3.assignment_grid();
+  sol_grid3.clear();
+  sol_grid3.set_values(vals);
+
+  std::cout << "New checker: solved by grid: " << std::boolalpha << checker3.is_solved_by( sol_grid3 ) << '\n';
+
 
   } catch (char const* e) {
     std::cout << e << '\n';
