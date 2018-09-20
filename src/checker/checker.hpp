@@ -118,7 +118,7 @@ namespace logicker::core::checker {
     //provozu, nedobre:
     //konstruktor puzzle_instance inicializuje podminky, coz by nemel delat on
     //krom toho lepe by bylo inicializovat membery bez mezikroku puzzle_instance
-    puzzle_instance<PuzzleType> instance{ topology, field_type };
+    puzzle_instance_v1<PuzzleType> instance{ topology, field_type };
     auto grid = instance.get_grid();
     //setovani givensu, ja nevim, melo by mit aspon vlastni metodu,
     //takhle je to v teto metode celkem detail a pritom je to vic nez pulka kodu
@@ -127,7 +127,7 @@ namespace logicker::core::checker {
     for (auto single_given_input : givens_input) {
       std::string single_given_name = single_given_input.first;
       const composite_input_node& single_given_node = givens_input.get<composite_input_node>(single_given_name);
-      givens_processor<typename puzzle_instance<PuzzleType>::grid_type>::process_a_given(single_given_node, grid);
+      givens_processor<typename puzzle_instance_v1<PuzzleType>::grid_type>::process_a_given(single_given_node, grid);
     }
     checker<PuzzleType> result{ grid, instance.get_condition_instances() };
     return result;

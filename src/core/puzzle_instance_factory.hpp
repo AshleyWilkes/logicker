@@ -8,7 +8,7 @@ namespace logicker::core {
   class puzzle_instance_factory {
     public:
       //should return const object; not now kvuli checker( std::move(puzzle) );
-      static puzzle_instance<PuzzleType> create(const input_node_base& input);
+      static puzzle_instance_v1<PuzzleType> create(const input_node_base& input);
 
   };
 
@@ -31,17 +31,17 @@ namespace logicker::core {
   };
 
   template<class PuzzleType>
-  puzzle_instance<PuzzleType>
+  puzzle_instance_v1<PuzzleType>
   puzzle_instance_factory<PuzzleType>::create(const input_node_base& input) {
     const composite_input_node& cast_input = dynamic_cast<const composite_input_node&>( input );
 
     const int_input_node& size_input = cast_input.get<int_input_node>("Size");
     int size = size_input.get();
-    typename puzzle_instance<PuzzleType>::field_type field_type{ 1, size }; 
-    typename puzzle_instance<PuzzleType>::topology::topology_size_t topology_size{ size, size };
-    typename puzzle_instance<PuzzleType>::topology topology{ topology_size };
+    typename puzzle_instance_v1<PuzzleType>::field_type field_type{ 1, size }; 
+    typename puzzle_instance_v1<PuzzleType>::topology::topology_size_t topology_size{ size, size };
+    typename puzzle_instance_v1<PuzzleType>::topology topology{ topology_size };
     //jako soucast volani konstruktor je volano vytvareni condition_instanci
-    puzzle_instance<PuzzleType> result{ topology, field_type };
+    puzzle_instance_v1<PuzzleType> result{ topology, field_type };
 
     //instance je hotova, zbyva vyplnit policka, jejichz hodnoty jsou
     //soucasti zadani (aka Givens)
@@ -49,7 +49,7 @@ namespace logicker::core {
     for (auto single_given_input : givens_input) {
       std::string single_given_name = single_given_input.first;
       const composite_input_node& single_given_node = givens_input.get<composite_input_node>(single_given_name);
-      givens_processor<typename puzzle_instance<PuzzleType>::grid_type>::process_a_given(single_given_node, result.get_grid());
+      givens_processor<typename puzzle_instance_v1<PuzzleType>::grid_type>::process_a_given(single_given_node, result.get_grid());
     }
     return result;
   }

@@ -2,7 +2,7 @@
 
 namespace logicker::core {
   template<class PuzzleType>
-  class puzzle_instance {
+  class puzzle_instance_v1 {
     public:
       typedef typename PuzzleType::field_type field_type;
       typedef typename PuzzleType::topology topology;
@@ -12,7 +12,7 @@ namespace logicker::core {
       typedef typename core::condition_instance<field_type> condition_instance;
       typedef typename std::shared_ptr<condition_instance> condition_instance_p;
 
-      puzzle_instance(const topology& topology, const field_type& field_type);
+      puzzle_instance_v1(const topology& topology, const field_type& field_type);
       grid_type get_grid() const;
       grid_type& get_grid();
       std::vector<condition_instance_p>& get_condition_instances() const;
@@ -26,31 +26,31 @@ namespace logicker::core {
   };
 
   template<class PuzzleType>
-  puzzle_instance<PuzzleType>::puzzle_instance(const topology& topology, const field_type& field_type) : grid_ { topology, field_type } {
+  puzzle_instance_v1<PuzzleType>::puzzle_instance_v1(const topology& topology, const field_type& field_type) : grid_ { topology, field_type } {
     init_grid_conds();
   }
 
   template<class PuzzleType>
-  typename puzzle_instance<PuzzleType>::grid_type
-  puzzle_instance<PuzzleType>::get_grid() const {
+  typename puzzle_instance_v1<PuzzleType>::grid_type
+  puzzle_instance_v1<PuzzleType>::get_grid() const {
     return grid_;
   }
 
   template<class PuzzleType>
-  typename puzzle_instance<PuzzleType>::grid_type&
-  puzzle_instance<PuzzleType>::get_grid() {
+  typename puzzle_instance_v1<PuzzleType>::grid_type&
+  puzzle_instance_v1<PuzzleType>::get_grid() {
     return grid_;
   }
 
   template<class PuzzleType>
-  std::vector<typename puzzle_instance<PuzzleType>::condition_instance_p>&
-  puzzle_instance<PuzzleType>::get_condition_instances() const {
+  std::vector<typename puzzle_instance_v1<PuzzleType>::condition_instance_p>&
+  puzzle_instance_v1<PuzzleType>::get_condition_instances() const {
     return grid_conds_;
   }
 
   template<class PuzzleType>
   std::vector<simple_condition_instance<typename PuzzleType::field_type>>
-  puzzle_instance<PuzzleType>::get_simple_condition_instances() const {
+  puzzle_instance_v1<PuzzleType>::get_simple_condition_instances() const {
     //!!THIS IMPLEMENTATION requires rectangle and condition_instance be
     //moveable, i.e. not have const members!!
     std::vector<simple_condition_instance<field_type>> result;
@@ -65,7 +65,7 @@ namespace logicker::core {
 
   template<class PuzzleType>
   void
-  puzzle_instance<PuzzleType>::init_grid_conds() const {
+  puzzle_instance_v1<PuzzleType>::init_grid_conds() const {
     for (const auto& cond_desc : PuzzleType::get_condition_descriptions()) {
       init_grid_conds(cond_desc);
     }
@@ -73,7 +73,7 @@ namespace logicker::core {
 
   template<class PuzzleType>
   void
-  puzzle_instance<PuzzleType>::init_grid_conds(const puzzle::condition_description& cond_desc) const {
+  puzzle_instance_v1<PuzzleType>::init_grid_conds(const puzzle::condition_description& cond_desc) const {
     for (const auto& group : grid_.topology().get_all_coords_groups(cond_desc.first)) {
       auto group_coords = grid_.topology().get_coords_in_group(group);
       std::vector<int> field_indices;

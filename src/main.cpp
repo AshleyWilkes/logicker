@@ -22,9 +22,9 @@ int main() {
     std::istreambuf_iterator<char>() };
 
   using logicker::puzzle::latin_square;
-  using logicker::core::puzzle_instance;
+  using logicker::core::puzzle_instance_v1;
   using factory_t = logicker::core::puzzle_instance_factory<latin_square>;
-  using puzzle_t = puzzle_instance<latin_square>;
+  using puzzle_t = puzzle_instance_v1<latin_square>;
   using checker_t = logicker::core::old_checker::checker<puzzle_t>;
 
   //using base_input = logicker::core::input_node_base;
