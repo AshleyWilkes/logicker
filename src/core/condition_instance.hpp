@@ -42,14 +42,14 @@ namespace logicker::core {
   template<class FieldType>
   class simple_condition_instance : public condition_instance<FieldType> {
     public:
-      simple_condition_instance(const condition::condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices);
+      simple_condition_instance(const condition_v1::condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices);
 
       const std::vector<int>& get_field_indices() const { return fields_; }
       bool is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const override;
       virtual std::vector<simple_condition_instance<FieldType>>
         get_as_simple_instances_vector() const override;
     private:
-      condition::condition<typename FieldType::value_type> cond_;
+      condition_v1::condition<typename FieldType::value_type> cond_;
       std::vector<int> fields_;
   };
 
@@ -66,7 +66,7 @@ namespace logicker::core {
   };
 
   template<class FieldType>
-  simple_condition_instance<FieldType>::simple_condition_instance(const condition::condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices) : cond_{cond}, fields_{field_indices} {}
+  simple_condition_instance<FieldType>::simple_condition_instance(const condition_v1::condition<typename FieldType::value_type>& cond, const std::vector<int>& field_indices) : cond_{cond}, fields_{field_indices} {}
 
   template<class FieldType>
   bool 
@@ -116,13 +116,13 @@ namespace logicker::core {
 
   template<class FieldType>
   std::unique_ptr<condition_instance<FieldType>>
-  condition_instance<FieldType>::create_instance(condition::ConditionDescription desc, const std::vector<int>& field_indices) {
+  condition_instance<FieldType>::create_instance(condition_v1::ConditionDescription desc, const std::vector<int>& field_indices) {
     std::unique_ptr<composite_condition_instance<FieldType>> result = std::make_unique<composite_condition_instance<FieldType>>();
     if (desc == "EachValueOnce") {
       for (size_t i = 0; i < field_indices.size(); ++i) {
         for (size_t j = i + 1; j < field_indices.size(); ++j) {
           std::vector<int> temp{ field_indices.at(i), field_indices.at(j) };
-          result->add(std::make_unique<simple_condition_instance<FieldType>>( condition::neq, temp ));
+          result->add(std::make_unique<simple_condition_instance<FieldType>>( condition_v1::neq, temp ));
         }
       }
     } else {
