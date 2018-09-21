@@ -1,6 +1,6 @@
 #include "puzzle/latin_square.hpp"
 #include "core/input_node.hpp"
-#include "core/puzzle_instance.hpp"
+#include "core/puzzle_instance_v1.hpp"
 #include "core/puzzle_instance_factory.hpp"
 #include "checker/checker_old.hpp"
 #include "checker/checker.hpp"

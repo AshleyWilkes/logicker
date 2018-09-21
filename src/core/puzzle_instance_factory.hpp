@@ -1,7 +1,7 @@
 #pragma once
 #include "elements/field_type/integer_field_type.hpp"
 #include "input_node.hpp"
-#include "puzzle_instance.hpp"
+#include "puzzle_instance_v1.hpp"
 
 namespace logicker::core {
   template<class PuzzleType>

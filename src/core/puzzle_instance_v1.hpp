@@ -1,5 +1,17 @@
 #pragma once
 
+//takze diskuse k inicializaci gridu a podminek nize oduvodnuje,
+//ze vlastne nic jako puzzle_instance neexistuje, misto ni
+//ma existovat classa assignment s velmi podobnymi vlastnostmi
+//tato classa, !!stejne jako checker a solver!!, ma byt inicializovana
+//primo z input_nodu.
+//
+//??anebo assignment na nic nepotrebuju??
+//
+//kazdopadne tedy novy plan je vytvaret checker tovarnou <class PuzzleType>(input_node)
+//a solver jinou takovou tovarnou
+//instead of
+//takovou tovarnou vytvarim puzzle_instance a tu posilam konstruktoru checkera a solvera
 namespace logicker::core {
   template<class PuzzleType>
   class puzzle_instance_v1 {
@@ -12,6 +24,18 @@ namespace logicker::core {
       typedef typename core::condition_instance<field_type> condition_instance;
       typedef typename std::shared_ptr<condition_instance> condition_instance_p;
 
+      //this calls grid_type constructor, which is incorrect, grid initialization
+      //depends not only in puzzle description, but also on why the puzzle
+      //instance is being created:
+      //1) to create an assingment, simple grid init is needed
+      //2) to create a checker, simple grid init is needed
+      //3) to create a solver, more complex grid init is needed
+      //
+      //(assignment and checker both use the same grid features (namely
+      //the ability to place a value to a field), that's why they need
+      //the same init method; solver needs to "understand" the grid
+      //in context of conditions too, that's why it needs more complex
+      //initialization)
       puzzle_instance_v1(const topology& topology, const field_type& field_type);
       grid_type get_grid() const;
       grid_type& get_grid();
@@ -21,6 +45,11 @@ namespace logicker::core {
       mutable std::vector<condition_instance_p> grid_conds_;
       mutable grid_type grid_;
 
+      //this is wrong, because the conds init depends not only on puzzle description,
+      //but also on why the puzzle instance is being created
+      //1) to create an assignment, no conds init is needed
+      //2) to create a checker, simple conds init is needed
+      //3_ to create a solver, more complex conds init is needed
       void init_grid_conds() const;
       void init_grid_conds(const puzzle::condition_description& cond_desc) const;
   };
