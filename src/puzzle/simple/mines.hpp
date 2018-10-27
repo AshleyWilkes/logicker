@@ -62,12 +62,11 @@ namespace logicker::puzzle::simples {
     for ( auto coords : centers_with_given ) {
       auto cg_neighs_no_given = topology_.cg_neighs( coords ).apply_filter( no_given( "Value" ));
       SlotIdsGroup neighs_no_given{ cg_neighs_no_given, "Value" };
-      auto is_true = []( const core::constraint::grid_slot& slot ) {
-        auto cast_slot = dynamic_cast<const core::constraint::value_slot<core::value::boolean>&>( slot );
-        return cast_slot.get_decided_value().get().get();
+      auto is_true = []( const core::constraint::value_slot<core::value::boolean>& slot ) {
+        return slot.get_decided_value().get().get();
       };
       auto extractor = core::constraint::extractor::value::count_if
-        <ValueSlotId, core::value::integer, decltype( is_true )>( neighs_no_given.elems(), is_true );
+        <ValueSlotId, core::value::boolean, core::value::integer>( neighs_no_given.elems(), is_true );
       auto constraint = core::constraint::value::values_equal
         <core::value::integer, Grid>( extractor, givens_.get<core::value::integer>({ coords, "Value" }) );
       puzzle_constraint_.add_constraint( constraint );
