@@ -152,13 +152,13 @@ namespace logicker::core {
   template<class FieldType, class Topology>
   field<FieldType>&
   grid<FieldType, Topology>::get_field(coords_type coords) {
-    return get_field( coords.index() );
+    return get_field( topology_.coords_index( coords ));
   }
 
   template<class FieldType, class Topology>
   const field<FieldType>&
   grid<FieldType, Topology>::get_field(coords_type coords) const {
-    return get_field( coords.index() );
+    return get_field( topology_.coords_index( coords ));
   }
 
   /*template<class FieldType, class Topology>

@@ -1,0 +1,38 @@
+#pragma once
+#include "../values_set_extractor.hpp"
+
+namespace logicker::core::constraint::extractor::values_set {
+  template<typename GridSlotId, typename GridValueType, template<typename> typename ValuesSetType = value_set>
+  class values_set : public values_set_extractor<GridValueType, grid<GridSlotId, GridValueType>, ValuesSetType> {
+    public:
+      values_set( std::vector<GridSlotId> slot_ids );
+      ValuesSetType<GridValueType> extract( const grid<GridSlotId, GridValueType>& grid, bool throw_on_undecided = true ) const override;
+    private:
+      std::vector<GridSlotId> slot_ids_;
+  };
+
+  template<typename GridSlotId, typename GridValueType, template<typename> typename ValuesSetType>
+  values_set<GridSlotId, GridValueType, ValuesSetType>::values_set( std::vector<GridSlotId> slot_ids ) : slot_ids_{ slot_ids } {}
+
+  template<typename GridSlotId, typename GridValueType, template<typename> typename ValuesSetType>
+  ValuesSetType<GridValueType>
+  values_set<GridSlotId, GridValueType, ValuesSetType>::extract( const grid<GridSlotId, GridValueType>& grid, bool throw_on_undecided ) const {
+    std::set<GridValueType> set;
+    for ( auto slot_id : slot_ids_ ) {
+      auto slot = grid.get_slot( slot_id );
+      if ( slot.is_decided() ) {
+        auto slot_value = slot.get_decided_value();
+        set.insert( slot_value.get() );
+        if ( slot_value ) {
+        } else {
+          throw "constraint/extractor/values_set/values_set::extract: empty value not impled";
+        }
+      } else if ( throw_on_undecided ) {
+        throw "constraint/extractor/values_set/values_set::extract: not impled";
+      } else {
+        throw "constraint/extractor/value/slot_value::extract: not throwing on undecided not impled";
+      }
+    }
+    return ValuesSetType<GridValueType>{ set, 0 };
+  }
+}

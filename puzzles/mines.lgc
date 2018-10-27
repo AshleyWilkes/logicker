@@ -1,0 +1,12 @@
+{
+  "Size":4,
+  "MinesCount":5,
+  "Givens":[
+    {"Row":0, "Col":2, "Value":2},
+    {"Row":1, "Col":1, "Value":4},
+    {"Row":1, "Col":3, "Value":3},
+    {"Row":2, "Col":0, "Value":1},
+    {"Row":3, "Col":1, "Value":1},
+    {"Row":3, "Col":3, "Value":2}
+  ]
+}

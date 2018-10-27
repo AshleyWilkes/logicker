@@ -67,7 +67,7 @@ namespace logicker::core {
   coords_parser<rectangle>::parse_coords(const composite_input_node& given_input_node, rectangle topology) {
     const int_input_node& row_node = given_input_node.get<int_input_node>("Row");
     const int_input_node& col_node = given_input_node.get<int_input_node>("Col");
-    return { topology.size(), row_node.get(), col_node.get() };
+    return { /*topology.size(), */row_node.get(), col_node.get() };
   }
 
   template<>
@@ -75,7 +75,7 @@ namespace logicker::core {
   coords_parser<square>::parse_coords(const composite_input_node& given_input_node, square topology) {
     const int_input_node& row_node = given_input_node.get<int_input_node>("Row");
     const int_input_node& col_node = given_input_node.get<int_input_node>("Col");
-    return { topology.size(), row_node.get(), col_node.get() };
+    return { /*topology.size(), */row_node.get(), col_node.get() };
   }
 
   template<>

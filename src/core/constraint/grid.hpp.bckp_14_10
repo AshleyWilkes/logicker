@@ -1,0 +1,34 @@
+#pragma once
+#include "map"
+#include "value_set.hpp"
+#include "value_slot.hpp"
+
+namespace logicker::core::constraint {
+  template<typename ValueSlotId, typename ValueType, template<typename> typename ValueSlotType = value_slot>
+  class grid {
+    public:
+      void add_value_slot(ValueSlotId slot_id, value_set<ValueType> value_set);
+      const ValueSlotType<ValueType>& get_slot( const ValueSlotId& slot_id ) const;
+      ValueSlotType<ValueType>& get_slot( const ValueSlotId& slot_id );
+    private:
+      std::map<ValueSlotId, ValueSlotType<ValueType>> slots_;
+  };
+
+  template<typename ValueSlotId, typename ValueType, template<typename> typename ValueSlotType>
+  void grid<ValueSlotId, ValueType, ValueSlotType>::add_value_slot(ValueSlotId slot_id, value_set<ValueType> value_set) {
+    ValueSlotType<ValueType> slot{ value_set };
+    slots_.insert({ slot_id, slot });
+  }
+
+  template<typename ValueSlotId, typename ValueType, template<typename> typename ValueSlotType>
+  const ValueSlotType<ValueType>&
+  grid<ValueSlotId, ValueType, ValueSlotType>::get_slot( const ValueSlotId& slot_id ) const {
+    return slots_.find( slot_id )->second;
+  }
+
+  template<typename ValueSlotId, typename ValueType, template<typename> typename ValueSlotType>
+  ValueSlotType<ValueType>&
+  grid<ValueSlotId, ValueType, ValueSlotType>::get_slot( const ValueSlotId& slot_id ) {
+    return slots_.find( slot_id )->second;
+  }
+}

@@ -8,3 +8,13 @@ enable_testing ()
 
 link_libraries (jsoncpp)
 add_executable (main src/main.cpp)
+
+#add_executable (the_words_test src/the_words.cpp test/the_words.cpp)
+#add_executable (the_words_selector_test src/the_words_selector.cpp src/the_words.cpp test/the_words_selector.cpp)
+#add_test (the_words_test the_words_test)
+#add_test (the_words_selector_test the_words_selector_test)
+
+#add_executable (links_info_test test/links_info.cpp)
+#add_executable (links_selector_test test/links_selector.cpp)
+#add_test (links_info_test links_info_test)
+#add_test (links_selector_test links_selector_test)

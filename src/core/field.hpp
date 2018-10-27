@@ -20,6 +20,7 @@ namespace logicker::core {
       value_type get() const;
       void eliminate(value_type value);
       bool is_set() const;
+      //rename to is_value_available
       bool is_value_option(value_type value) const;
       std::vector<value_type> available_values() const;
 

@@ -1,0 +1,45 @@
+//**************Defining given set for ValueSetsEqual**************
+//set for Calcudoku, Futoshiki, Kropki, Staircases, Sudoku
+//  "1",..,$SIZE
+//set for ABC
+//  "A",..,$LAST; $SIZE
+//set for Mrakodrapy
+//  "1",..,$LAST; $SIZE
+//
+//set for Ripple
+//  "1",..,$REGION_SIZE
+//
+//set for DangerZone
+//  "X", "Y", "Z"
+//  "X"
+//  "Y"
+//  "Z"
+
+
+//*****************countInRegion***************
+//ve vsech vyskytech mam predem dany pocet, jemuz se count ma rovnat
+//i skupinu policek, v nichz mam count pocitat
+//Diamonds
+//  for (coords in corners)
+//    if given[coords] countInRegion{neighCenters[coords], given[coords]}
+//Grades, Magnets, Stany, (StarBattle), Teplomery
+//  for (coords in composite_border_top, composite_border_left)
+//    if given[coords] countInRegion{row_col[coords], given[coords]}
+//Heyawake, (StarBattle)
+//  for (region in regions)
+//    if given[region] countInRegion{region, given[region]}
+//Mrakodrapy
+//  for (coords in composite_border)
+//    if given[coords] countInRegion{row_col[coords], given[coords]}
+//Norinori
+//  /*2 shadeds in each region*/
+//  for (region in regions)
+//    countInRegion{region, 2}
+//  /*shadeds form pairs*/
+//  for (coords in centers)
+//    if shaded countInRegion{neighs[coords], 1}
+
+//propojuju nekolik veci:
+//- mnozinu ValueSetu
+//- podminku nad Value
+//- int, reprezentujici pocet ValueSetu, v nichz je setnuta hodnota, ktera splnuje podminku

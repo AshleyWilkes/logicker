@@ -1,0 +1,99 @@
+#pragma once
+
+namespace logicker::core::constraint {
+  template<typename ValueType>
+  class value_set;
+
+  template<typename ValueType>
+  bool operator==( const value_set<ValueType>& lhs, const value_set<ValueType>& rhs );
+  //value_set ma po vytvoreni umet odpovidat na tyto otazky:
+  //jake hodnoty (including EMPTY) s jakymi nasobnostmi do setu patri
+  //nasobnosti muzou byt zadane maximem a/nebo minimem
+  //
+  //vnitrne toto chci implementovat pomoci 
+  //mapy<Value, int>; instance value_setu ma obsahovat
+  //takovouto datovou strukturu bez ohledu na to, jakym
+  //konstruktorem byla vytvorena, a tato datova struktura
+  //ma byt zdrojem informaci pro metody, odpovidajici na
+  //otazky vyse.
+  //
+  //!!implementovat value_set, v nemz se nesmeji opakovat
+  //hodnoty, jako zvlastni pripad je premature optimization
+  //
+  //!!implementovat value_set, jenz nesmi obsahovat "prazdnou"
+  //hodnotu, je rovnez premature optimization. Sice to neni
+  //uplne nejcistsi reseni, ale jevi se nejjednodussi pracovat
+  //s prazdnou hodnotou takto:
+  //neni to hodnota zadneho typu, lezi mimo ValueTypy
+  //set ji automaticky podporuje, ma vnitrni promennou, ktera
+  //rika, kolik prazdnych hodnot je v danem setu; pokud v nekterem
+  //setu prazdna hodnota neni/nesmi byt, je tato vnitrni promenna
+  //rovna 0
+  //kazdy, kdo s value_setem pracuje (coz je v tuto chvili pouze
+  //value_slot), musi o teto vlastnosti implementace vedet a chovat
+  //se podle toho
+  //
+  //jako prilis se mi to nelibi, radsi bych, kdyby interface,
+  //ktery value_set posyktuje ven, umoznoval pracovat s prazdnou
+  //hodnotou ekvivaletne ostatnim hodnotam, ale nevidim, jak to
+  //hezky udelat, a kdovi jestli to vubec jde. Praci s values a
+  //ValueTypes bude beztak jeste nutno prepromyslet, az budu
+  //chtit zkombinovat dva typy do jednoho (napr. uloha,
+  //kombinujici domino a lode, muze zjevne existovat;
+  //nebo uz blbe magnety by mely asi pracovat s dvema typy
+  //hodnot). Nicmene nechci zasek, nybrz dotahnout sprint.
+  template<typename ValueType>
+  class value_set {
+    public:
+      using Container = std::map<ValueType, int>;
+      //kazdy element v range ma nasobnost 1
+      //weird
+      template<typename Iterator>
+      value_set( const Iterator& begin, const Iterator& end, int num_empties = 0 );
+      template<typename Range>
+      value_set( const Range& range, int num_empties = 0 );
+      const typename Container::const_iterator begin() const;
+      const typename Container::const_iterator end() const;
+      int get_num_empties() const;
+
+      friend bool operator== <>( const value_set& lhs, const value_set& rhs);
+    private:
+      Container elements_;
+      int num_empties_;
+  };
+
+  template<typename ValueType>
+  template<typename Iterator>
+  value_set<ValueType>::value_set( const Iterator& begin, const Iterator& end, int num_empties ) : num_empties_{ num_empties } {
+    for ( auto it = begin; it != end; ++it ){
+      elements_.insert({ *it, 1 });
+    }
+  }
+
+  template<typename ValueType>
+  template<typename Range>
+  value_set<ValueType>::value_set( const Range& range, int num_empties ) : value_set{ range.begin(), range.end(), num_empties } {};
+
+  template<typename ValueType>
+  const typename value_set<ValueType>::Container::const_iterator
+  value_set<ValueType>::begin() const {
+    return elements_.begin();
+  }
+
+  template<typename ValueType>
+  const typename value_set<ValueType>::Container::const_iterator
+  value_set<ValueType>::end() const {
+    return elements_.end();
+  }
+
+  template<typename ValueType>
+  int
+  value_set<ValueType>::get_num_empties() const {
+    return num_empties_;
+  }
+
+  template<typename ValueType>
+  bool operator==( const value_set<ValueType>& lhs, const value_set<ValueType>& rhs) {
+    return lhs.elements_ == rhs.elements_ && lhs.num_empties_ == rhs.num_empties_;
+  }
+}

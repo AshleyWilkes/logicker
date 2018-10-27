@@ -1,0 +1,58 @@
+-- checker i solver pro latin_square jsou jako PoC hotove; finishnout:
+  -- rozdelit na one file == one class
+  -- rozdelit do adresaru
+  -- rozdelit do samostatne kompilovanych modulu
+  -- zmenit typedefy na usingy
+  -- vycistit templatovani (co ma jake template parametry, jak se co odkazuje na odvozene typy)
+  -- popsat interfacy
+  -- vycistit interfacy
+  -- vycistit implementace metod
+  -- napsat testy
+  -- namrdat do branche devel a na konci udelat otagovanou verzi 0.0.1
+-- udelat conditionu pomoci function objectu instead of pointeru to function (core guide lines - T40)
+-- (2) latin_square ma mit value_type jako template parametr s defaultni hodnotou int
+-- (2) core/condition ma mit Topologii
+-- (3) review interfaces, then write tests for them
+-- (3) pridat testy na integer_field
+-- (3) pridat testy na condition
+-- (3) pridat testy na condition_instance
+-- (3) pridat testy na grid
+-- (3) pridat testy na rectangle
+-- (4) review implementations
+-- (4) grid::get_field ma bejt templatovna metoda, abych nepotreboval const i non-const verzi
+
+jake classy mame v jednotlivych souborech:
+core
+  checker
+    checker
+  condition
+    condition
+  condition_instance
+    condition_instance
+    simple_condition_instance
+    composite_condition_instance
+  field
+    field
+  grid
+    elimination_deduction
+    grid
+  input_node
+    input_node_base
+    composite_input_node
+    int_input_node
+  integer_field_type
+    field_type
+  puzzle_instance
+    puzzle_instance
+  puzzle_instance_factory
+    puzzle_instance_factory
+    givens_processor
+    coords_parser
+    value_parser
+  rectangle
+    rectangle
+    rectangle::rectangle_coords
+  solver
+    solver_condition_instance
+    solver
+    solver_factory

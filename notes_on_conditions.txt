@@ -1,0 +1,267 @@
+Terminologie: ??Requirement, Constraint??
+
+Existuji 2 metody postupu pri reseni uloh: odvozovani a brutal force. Odvozovani
+je princip, ktery pouziva Solver, a zabyvam se jim ve zbytku tohoto souboru.
+Brutal force pouziva potomek Solveru Analyzer. Ten tedy bude konfigurovatelny
+na ruzne zpusoby, ktere umozni hledat odpovedi na ruzne otazky. V tomto souboru
+se brutal forcem nadale nezabyvam, je to otazka, ktera si zaslouzi vlastni analyzu.
+
+1) **Logickerovy podminky**
+  jsou trivialni nebo slozene a lze je vytvorit jednak nad Values a jednak nad ValueSety.
+  Trivialni podminka je basically totez co jeden boolovsky operator; pro Values jde primo
+  vyhodnotit na platnost (true/false), pro ValueSety muze umoznit rozhodnout, zda plati
+  nebo jaka dedukce je nutna k tomu, aby platila. Slozena podminka je strom, jehoz listy
+  jsou trivialni podminky, mezi nimiz slozena podminka zavadi nejaky vztah (napr. implikaci).
+  Podminky se svym okolim komunikuji dvema zpusoby: 
+  a) ven -- jejich metoda process vraci informaci o aktualnim stavu podminky
+  b) dovnitr -- policka, jichz se dana podminka tyka, mohou pri zmene sveho stavu podminku
+      upozornit, ze k teto zmene doslo a proc (jaka dedukce to byla)
+
+2a) **Trivialni podminka nad Values**
+  neni nic jineho, nez n-arni operator, vracejici bool. Takova vec se v c++ implementuje
+  jako funkcni objekt (tj. objekt s operatorem () ), prinejmensim pokud arita operatoru
+  je 2. Pro vyssi arity se nabizi, aby operator() bral bud promenlive mnozstvi parametru
+  nebo vector. Na zaklade predanych hodnot muze byt Met (vrati true) nebo Violated
+  (vrati false).
+
+2b) **Trivialni podminka nad ValueSety**
+  by taky mohl byt n-arni operator. Jako parametry by bral ValueSety. ??vracel by
+  boost::optional<deduction>, kde deductiona by mohla byt Ok, Broken anebo opravdova
+  deductiona, anebo by vracel std::pair<STATUS, boost::optional<deduction>>??
+  Musi pracovat nad takovym poctem ValueSetu takovych typu, aby prislusna Trivialni podminka
+  nad hodnotami byla schopna prijmout po jedne hodnote z kazdeho ValueSetu. Na zaklade hodnot,
+  pritomnych v jednotlivych ValueSetech muze byt v jednom ze tri stavu: Met, Undecided, Violated.
+  Stav Met znamena, ze libovolna kombinace hodnot ve ValueSetech splnuje prislusnou Trivialni
+  podminku. Violated znamena, ze zadna kombinace hodnot ve ValueSetech nesplnuje prislusnou
+  Trivialni podminku. Undecided znamena, ze existuje kombinace, ktera prislusnou Trivialni podminku
+  splnuje, i kombinace, ktera ji nesplnuje. Undecided podminka muze byt schopna urcit dedukci
+  za nutnou podminku pro svou splnenost.
+
+3) **Slozena podminka**
+  Strom nad 2a) nebo 2b); kazdy non-leaf Node predstavuje boolovsky operator
+  nad svymi child-nody. ??Pro zacatek staci podporovat NOT nad leafem a jako non-leafy
+  pouze AND a OR, pozdeji bude snadne pridat dalsi non-leafy.?? Jsa dotazan na svuj stav,
+  non-leaf ocheckuje stav svych childu a na zaklade jejich responsu urci svuj response.
+  Z toho plyne, ze slozena podminka muze nabyvat stejnych stavu jako jeji leaf nody,
+  a tedy je v jednom ze dvou (podminka nad Values) nebo tri (podminka nad ValueSets)
+  stavu. Neni problem kombinovat ve Slozene podmince Trivialni podminky dle 2a) s 2b),
+  v takovem pripade se podminka 2a) interpretuje jako specialni pripad podminky 2b),
+  jedna se o Slozenou podminku nad ValueSety a podle toho s ni lze operovat. ??Interne
+  muze podminka byt v rade ruznych, ruzne slozitych stavu, ktere ale navenek nejsou
+  videt (neda se zjistit, proc je napr. AND podminka undecided, z jakych subpodminek
+  se sklada apod.). Je to ale dobre, kdyz jako soucast dedukce chci vyhledove uvadet
+  i identifikaci toho, jak jsem dedukci nasel?? (??podminka se musi umet navenek tvarit
+  ruzne anebo se musi umet transformovat na jinou podminku.??)
+
+
+Checker obsahuje dve sady podminek: podle prvni se dohledaji hodnoty neviditelnych
+policek, ktere kvuli neviditelnosti nejsou soucasti reseni; s touto sadou podminek
+Checker funguje stejne jako Solver, podminky jsou nad ValueSety atd. Pokud uloha
+neviditelna policka nepotrebuje, je tato sada podminek prazdna. Druha sada podminek
+je nad Values, vola se pote, co jsem doplnil vsechna neviditelna policka a overil,
+ze vyplnenost policek splnuje urcite zakladni pozadavky (kazde policko ma nasetovanou
+hodnotu), a ocekava se, ze vsechny podminky vrati Met. Vrati-li nektera podminka
+Violated, pak reseni, ktere overuju, neni spravne.
+
+
+Nize reseny OCL (OSL) neni dobry napad, tento list je totiz prave to, co jedna podminka, ktera
+ANDuje vsechny podminky v listu. Obligatory v nazvu odkazuje k tomu, ze chci, aby tato ANDovana
+podminka platila, to ale neni otazka podminky jako takove, ale pouze jeji interpretace, ktera
+prirozene prichazi zvenku. Takze diskutujme, jak se zvenku na podminky hodlam divat a jak
+to ovlivni API podminek.
+
+/*Podminka nad Values je splnena nebo nesplnena, that's all, Tva Mana. Na to mi staci metoda
+get_status, ktera vrati {Met, boost::none} nebo {Violated, Reason}. Tato dvojice ma byt rovnez
+znama jako ??ValueConditionStatus??*/
+
+Podminka nad Values nema samostatne existovat, z pohledu Checkera i Solvera je to totez jako podminka
+nad ValueSets, akorat shodou okolnosti vyhodnocena nad ValueSety s jedinou pripustnou hodnotou,
+v dusledku cehoz nikdy nevrati {Undecided, Deduction}.
+
+Podminka nad ValueSet je slozitejsi, ale metoda get_status, vracejici ??ValueSetConditionStatus??
+by to mohla resit. Mozna s volitelnym bool parametrem, ktery suppressuje hledani dedukce. Notifikace,
+umoznujici uspavani a probouzeni podminek, by se sice dala povazovat za optimalizaci, takze neni
+soucasti hlavniho funkcniho API, ale je to optimalizace natolik dulezita, ze ji chci includnout.
+Zmineny ValueSetConditionStatus by mel byt totez jako ValueConditionStatus, pouze rozsireny
+o dalsi pripustnou navratovou hodnotu {Undecided, boost::optional<Deduction>}.
+
+A ted k tomu, ze CompositeCondition je strom: Potrebuju datovou strukturu, ktera mi reprezentuje
+node stromu obecne, tj. pointer na rodice, pointery na childy typu composite a pointery na childy
+typu trivial. Dvak potrebuju, aby mi takovyto node umel vyhodnotit zminene Statusy, a to na zaklade
+Statusu vsech childu. A otazka zni, jsou toto dve nebo jedna zodpovednost, a mela by tudiz
+implementace byt nejak rozdelena do dvou "trid" anebo ne? A rozdelena-li, tak jaky vztah by
+ty dva kusy mely mezi sebou mit? A co iterator pres trivialni podminky, potrebuju ho? Prinejmensim
+pro ty optimalizace (slucovani podminek nad stejnymi skupinami policek) celkem jiste ano, potrebuju.
+
+Rekneme, ze exje ACondition s predkem Node a strom obsahuje jako childy tyto AConditiony. Pak
+mam asi vsechno, co potrebuju?, pokud mi staci pristupovat k childum pres interface spolecny
+pro Trivial i CompositeConditiony, coz mi ?nejen staci, ale je to dokonce i zadouci?. Pristup
+k seznamu trivialnich leafu rozhodne potrebuju, takze ten muj strom ma umet iterovat pres
+leafy, k cemuz potrebuju nejaky iterator, to pujde.
+
+
+
+
+Pro odvozovani (checker i solver) potrebuju neco jako ObligatoryStatementsList. V tomto listu jsou
+tvrzeni, ktera musi byt splnena. List umoznuje transformovat svuj obsah na zaklade nove zjistenych
+skutecnosti: napr. pokud je v listu implikace a zjisti se, ze jeji leva strana je splnena, musi se
+misto teto implikace nove stat prvkem listu jeji prava strana. Pokud je prvkem listu AND, musi se
+misto tohoto ANDu nove prvkem stat vsechna ANDovana tvrzeni. Pokud je prvkem listu OR a zjisti se,
+ze all-but-one ORovana tvrzeni jsou false, musi se misto onoho ORu stat prvkem jeho jedine zbyle
+nerozhodnute tvrzeni.
+
+Checker by mohl pracovat takto:
+1) Over, ze v kazde policko je vyplneno v souladu s tim, jake pozadavky zadani klade
+na vyplnenost jednotliveho policka. Pokud ne, je reseni spatne.
+2) Over, ze policka vyplnena jiz v zadani, obsahuji tytez hodnoty. Pokud ne, je reseni spatne.
+3) Zeptej se OCL na dedukci, dostanes bud BrokenCondition dedukci, nebo zadna dedukce
+nebude nalezena. Podle toho je reseni spatne, resp. spravne.
+
+Jak vypada a funguje ObligatoryConditionsList?
+Je to seznam, jejz je nutne chapat jako seznam prave vsech podminek, ktere musi splnit spravne
+inicializovany obrazec (ktery tedy pripousti v polickach jen pripustne hodnoty), aby se stal resenim
+ulohy. Inicializovany list, jsa aktivovan, prochazi sve podminky a pokousi se je overit/zamitnout/
+transformovat na jednodussi podminky tak dlouho, dokud se mu dari delat pokrok. Pokud transformaci
+na jednodussi podminku ziska dedukci, sdeli tuto svemu volajicimu. List nebo jeho jednotlive
+podminky pak musi vedet, odkud ziskavat aktualni stav ValueSetu, nad nimiz pracuji: Checker a Solver
+zde funguji jako StatusProviders; maji metodu, jez zavolana s vhodnymi parametry vrati prislusny
+ValueSet; jake jsou to parametry resi Checker a Solver kazdy jinak: Solver optimalizuje, aby se mohlo
+jednat o jediny int, Checker naopak pouzije srozumitelny neoptimalizovany pristup pomoci souradnic
+a nazvu ValueSetu jako membera prislusneho policka. Checker a Solver reaguji kazdy jinak na to,
+kdyz jim OCList posle dedukci (Checker ji neocekava, asi skonci, Solver ji naopak ceka), a OCList
+umoznuje fungovat v modu, kdy se po nalezeni dedukce deaktivuje a zacne cekat na novou aktivaci, a mod,
+kdy zkousi hledat, dokud se to dari. Prvni mod je urcen pro Solver, druhy pro Analyzer.
+
+Aktivovany OCL nemuze predpokladat, ze mu StatusProvider bude vracet na stejny dotaz stale stejnou odpoved.
+Muze predpokladat, ze bude vracet zmensujici se podmnoziny. Takovyto OCL ale nedokaze poznat, jestli
+uz nema cenu zkouset neco vymyslet, protoze se mu policka vyplnujou pod rukama. Cili OCL muze predpokladat,
+ze staci, kdyz vymysli vsechno, co muze na zaklade stavu policek v okamziku, kdy byl naposledy aktivovan.
+Smi vymyslet i veci, ktere plynou z pozdeji zjistenych skutecnosti (pokud si jich vsimne), ale muze predpokladat,
+ze o nove zjistene skutecnosti se stara jeho listener, a pokud se neco zjistilo, bude znovu aktivovan 
+s novejsim stavem gridu (tj. s podmnozinou nynejsiho stavu). Takto si OCL muze oznacovat podminky
+za vyhodnocene a po zpracovani vsech se deaktivovat. Hmm, ale toto je dulezite jen pro Analyzer a tam
+prave potrebuju, aby se mi Grid pod rukama nemenil. Mno ale to se da zaridit, proste Analyzer bude udelany
+tak, aby OCL daval konzistentni odpovedi.
+
+Je celkem jiste, ze informace o nalezenych dedukcich sdeluje OCList svemu volajicimu prostrednictvim
+nejake fronty nebo neceho podobneho: proste pushne dedukci do nejake datove struktury a bud se deaktivuje
+nebo ne, podle nastaveni.
+Rovnez se musi umet zastavit na povel (napr. proto, ze jiny OCL v jinem threadu prisel na nejakou dedukci
+a chce se pokracovat az po jejim zpracovani).
+A dost mozna chci, aby se OCL umel deaktivovat, kdyz uz prilis dlouho nic nenasel. Jina moznost je
+zkratka neinstancializovat OCLs s takovymi mnozinami podminek, ktere by umoznovaly prilis dlouhy beh.
+Toto je ale asi nedostatecne promyslena otazka.
+
+ValidStatementInstance je instance podminky z vyse. Zna "souradnice" ValueSetu, ktere ji zajimaji,
+a zna svuj OCList, ktereho se na ValueSety pta a kteremu sdeluje dedukce, co nasla. ??Soucasti
+dedukci ma (prinejmensim vyhledove) byt informace o tom, kdo (tato podminka) dedukci vymyslel
+a co (konkretni detaily stavu gridu) ho k tomu vedlo; proted resim tim, ze proste dedukce krome
+faktickych informaci o tom, co znamena, bude obsahovat data member s dodatecnymi udaji.?? Za dedukci
+se povazuje nesplnene a nevyloucene trivialni tvrzeni. Tedy zredukuje-li se podminka do tvrzeni,
+ktere je trivialni, neni splnene a neni ani vyloucene, poslu informaci o teto dedukci a podminku
+tim povazuju za splnenou. Pokud se podminka zredukuje na trivialni splnene tvrzeni, tak hura, je splnena,
+a pokud na trivialni vyloucene tvrzeni, tak smula, to je error, je treba poslat dedukci o erroru
+a deaktivovat se.
+
+Pro obecnost se jevi uzitecne implementovat podminku tak, aby mela moznost "expandovat se postupne",
+tj. napr. aby implikace neexpandovala svou pravou stranu, dokud se nezjisti, ze leva strana je splnena
+(a ze je tedy expanzi potreba udelat). Zvlast podstatne je mit moznost vyuzit skutecnosti, vedoucich
+k expanzi (zde napr. jakou hodnotu ma policko, jehoz se tyka leva strana), pro upresneni detailu
+toho, jak se prava strana expanduje. Tyto detaily ale obecne mohou mit libovolnou podobu, napr. si
+vzpominam na Sudoku, ktere melo po stranach zadane soucty n cisel v prislusnem smeru, kde n byla hodnota
+v nejblizsim policku. Jinymi slovy libovolna inicializace, kterou umim udelat pri vytvoreni podminky,
+ma byt proveditelna i dynamicky v prubehu podminky vyhodnocovani. To v dusledku znamena, ze VSInstance
+ma prostrednictvim OCL pristup az tak daleko, ze k informacim, poskytovanym Gridem.
+
+Nicmene snazsi se zda udelat Slozenou podminku jako const strom a tak bude taky vypadat prvni implementace,
+"postupnou expanzi" prirazuju k optimalizacim, ktere lze ocekavat v budoucnu. Zmineny priklad se Sudoku
+se soucty n cisel jde resit jako (f1["val"] == 1 && sum(fn["val"]) == S) || (f1["val"] == 2 && ...) ...
+
+Inu a jak tedy takovou podminku zapsat?
+?) ForEachPairOfFields f1["row"] == f2["row"] ==> f1["val"] != f2["val"]
+?) ForEachFieldInRow(rowId) f1 != f2 ==> f1["val"] != f2["val"]
+?) ForEachFieldInDir(f1, {left, right, up, down}) f1["val"] != f2["val"]
+?) ForEachFieldInRow(rowId, dir)
+    f1["val"] > f2["tallestSoFar"] 
+        f1["tallestSoFar"] = f1["val"]
+    ELSE
+        f1["tallestSoFar"] = f2["tallestSoFar"]
+    f1["val"] > f2["tallestSoFar]
+        f1["visibleDir"] = 1
+    ELSE
+        f1["visibleDir"] = 0
+
+Zde vidime radu promennych: 
+a) ktera policka brat v potaz (cely sloupec, od daneho policka vsechna vlevo, od daneho policka
+    prvni tri dolu apod) 
+    -- ??otazka nejspis na gridStatus v kombinaci s Topology??
+    -- ?odpovedi je vector<coords>?
+b) jak policka pro podminku kombinovat (jednotlive policko, usporadane/neusporadane dvojice,
+    dvojice sousednich policek, co ja vim...) 
+    -- ??to je trivialni kombinatorika, zvladne nejaka knihovna std-like algoritmu??
+    -- ?odpovedi je libovolny kontejner (v teorii nemusi ani byt standardni, staci, ze jim
+        jde iterovat)?
+c) ktere values v polickach brat v potaz (tj. na co se status providera zeptat)
+    -- ??nejakou templatovou magii bych mozna umel dosahnout FieldTypu s dynamicky (pri prekladu)
+        urcenou skladbou datovych memberu, pak by ty potrebne values sly moc pekne resit
+        pomoci pointer-to-member??
+    -- ?provizorne lze resit mapou string=>Field? -- toto je blby, to predchozi by bylo super!
+    -- jedna se o dotaz na GridStatus, resp FieldStatus, odpovedi je u Solveru ValueSet,
+        u Checkeru by melo stacit, kdyz odpoved je boost::optional<Value>, kde boost::none
+        znamena Unset
+d) jak pracovat se ziskanymi hodnotami
+    -- tj konkretni Slozena podminka (strom) nad (u Solveru) ValueSety nebo (u Checkeru)
+        nad Values
+
+Resume uvah o zdehle bodech a) - d) a vytvareni instanci podminek je, ze proces instancializace
+zavisi na konkretni uloze, resp. konkretnich podminkach a nema cenu snazit se ho narvat do 
+sablony. Jedine, co se da rict zcela obecne, je ze instancializace zacina nejakou "konstantou"
+v definici ulohy, ze dochazi k expandovani zminene konstanty na jine konstanty, pricemz se
+pouzivaji informace ze zadani ulohy (velikost obrazce, tluste cary, kdovico), a proces
+expanze skonci, jakmile jsem dospel k hotovemu OCL.
+
+Backtrack (aka brutal force) a slucovani podminek nad stejnymi policky do komplikovanejsich
+podminek za ucelem efektivnejsiho dedukovani pro tuto chvili povazuju za optimalizaci a dale
+neresim, dokud neni implementovan checker a solver vyuzivajici OCL stejne jako alespon
+castecne obecny postup vytvareni OCL na zaklade definic a zadani uloh.
+
+/*Takze checker od podminek potrebuje, aby byly-li by spravne serazene, kazdou z nich vyhodnotil
+prave jednou a udelal si u ni fajfku. Pro hodnocena policka gridu (to jsou ta viditelna policka,
+hodnoty v nichz jsou to, co predstavuje reseni ulohy) predpoklada, ze jsou vsechna vyplnena
+v souladu s pripustnymi hodnotami a ze tedy get_value() vrati hodnotu v prislusnem oboru hodnot,
+aniz by to checker sam musel overovat. Pro ulohy s neviditelnymi policky ze v tom spravnem
+serazeni podminek se objevi driv podminka, z niz pujde neviditelne policko vyplnit, a pak teprve
+podminka, ktera ho bude chtit cist.*/
+
+/*Hele tady je zajimava vec: podminky pro sudoku 2x2 jsou:
+val[0,0] = 1 ==> val[0,1] != 1
+coz prevedeno je
+val[0,0] != 1 || val[0,1] != 1
+Checker to vyhodnoti tak, ze precte oba valy a posoudi, zda alespon jeden neni 1
+Solver to vyhodnoti tak, ze precte napr. val[0,0]. Pokud tento neni 1, celou podminku oznaci za
+splnenou. Pokud val[0,0] je 1, pak podminku zmeni na val[0,1] != 1, coz muze byt dedukce. Pokud
+val[0,0] neni urcen dostatecne pro vyhodnoceni leve podminky (zde neni jiste ruzny od 1), 
+necham levou stranu nerozhodnutou a jdu zkusit cely postup s pravou stranou.*/
+
+/*Kdyz by slo o ulohu s neviditelnymi policky, pak dedukce musi delat i Checker.
+
+Popiste rozdil mezi Checkerem a Solverem:
+Checker pracuje s sirsi mnozinou podminek, napr. overuje, ze v kazdem policku je setnuta
+hodnota, coz Solver k nicemu nepotrebuje. !!Checker totiz, mile deti, vystaci s dedukcemi
+nad hodnotami, nepotrebuje dedukovat nad ValueSety!!*/
+
+/*V bode 3) bych tedy predaval Solveru vne nej vytvoreny grid, zatimco normalne Solver pracuje
+nad sebou vytvorenym working_grid_em, ktery si muze zadratovat do podminek. !!!Cili zasadni rozdil 
+je v tom, ze Solver je optimalizovany na vyhodnocovani podminek nad policky working_grid_u,
+zatimco Checker vyhodnocuje podminky nad ad-hoc ValueSety.!!!*/
+
+/*Premature optimization jak noha: Solver ma totiz ValueSety (aka field<FieldType>y) z gridu vyndane
+a umistene ve vectoru a jeho conditiony znaji indexy jednotlivych ValueSetu, stejne jako tyto
+ValueSety (nebo spis jejich indexy) vedi, ktere conditiony se maji vzbudit, dojde-li v nekterem
+ValueSetu ke zmene. Nebo ma Solver dokonce v kazde sve podmince ValueSety prekopirovane, a v pripade
+potreby (po notifikaci o zmene stavu nektereho ValueSetu), si v tomto ValueSetu uvedenou zmenu sam
+provede.
+
+Tedy receno jeste trochu jinak rozdil mezi Solverem a Checkerem je v tom, jak ziskavaji hodnoty,
+ktere je treba odeslat podminkam, a jak vyhodnocuji dedukce, ktere jim podminky vrati.*/
+

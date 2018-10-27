@@ -1,0 +1,151 @@
+=======LogickerWorkerFactory=========
+Takže plán je mít konfigurovatelný objekt LogickerWorkerFactory. Ten si přečte konfiguraci (definici PuzzleTypu), čímž se inicializuje do stavu, kdy bude schopen vyrábět Worker objekty.
+
+Worker objekty jsou Checker, Solver a Analyzer. Vyrobí je WorkerFactory na základě textového souboru Assignment; ten obsahuje zadání konkrétní úlohy. (WorkerFactory má metody buildChecker, buildSolver a buildAnalyzer).
+
+Lze tedy se značnou mírou přesnosti říct, že WorkerFactory se inicializuje textem zadání úlohy, zatímco Worker objekty se inicializují obrázkem.
+
+V zájmu jednoduchosti datových souborů (Assignment, Solution) chci umět odvozovat údaje (jako např. velikost úlohy třeba u Mrakodrapů) z formátu dat v těchto souborech. Idea je mít StreamReadery různých složitostí a schopností, které k tomu využiju.
+
+StreamReader si pomocí Tokenizeru přečte obsah souboru s Assignmentem nebo Solutionou a odvodí si hodnoty, které jsou v něm přítomny jen implicitně. (?Toto může provádět opakovaně, v případě, že je třeba načíst pro každé políčko několik údajů?) (?Obsah souboru -- "tokeny" typu LogickerValue -- si reader uloží do své za tímto účelem definované datové struktury pro další použití?)
+
+==========PuzzleType==========
+PuzzleType je konfigurace, která stačí WorkerFactory k tomu, aby uměla vytvářet Workery. PuzzleType musí obsahovat:
+- jaký StreamReader použít pro jaký formát datového souboru, údaje o vlastnostech načtených dat (z jakých tokenů se smí skládat načtená data, jak je který token kódován v datovém souboru)
+- asserty: jaké vlastnosti musí splňovat odvozené implicitní hodnoty (např. Sudoku musí být čtverec, tj. počet řádků musí být stejný jako počet sloupců)
+- recept: jak na základě implicitních hodnot vytvořit Grid, Conditiony atd.
+
+Současná fáze návrhu předpokládá, že načítání PuzzleTypu bude řešeno nějakým parserem, vytvořeným skrz yacc a bison (jsou-li tyto technologie stále state-of-the-art). Na druhou stranu teď jak to píšu mě napadá, že ježto tento parser nemůže přímo vytvářet jakékoli objekty z LogickerLibu (protože mu například chybí info o rozměrech Gridu), takže jsem žádostiv, jak si asi představuju interface, resp. datovou strukturu, kterou bude PuzzleType obsahovat, aby uměl metody z LogickerLibu volat.
+
+==========LogickerLib===========
+Má obsahovat algoritmy, určené pro (ideálně rozumně rychlé) implementace metod, které umožní Workerům dělat jejich práci, a má také obsahovat datové typy (a jejich příslušné továrny a inicializační metody), které umožní uživateli vytvořit datové struktury, s nimiž na počátku věty zmíněné algoritmy dokáží pracovat.
+
+Návrh datových typů je založen na základních konceptech, jejichž pomocí je snad možné specifikovat libovolnou neoptimalizační úlohu. 
+
+Základem je Value, které představuje hodnotu a detaily jsou zatím značně vágní, není mi teď zřejmé, zda chci obecně předpokládat jejich porovnání na rovnost nebo ani to ne. Budou každopádně existovat i specializovanějsí koncepty, např. IntValue, umožňující porovnání na větší/menší a řada dalších.
+
+První úroveň agregace Values do složitější datové struktury představují ValueSet a ValueMultiSet; jejich názvy jsou selfexplanatory. Pro Values, které nejsou porovnatelné na ekvivalenci, jsou obě struktury stejně použitelné, pro porovnatelné hodnoty existuje rozdíl: MultiSet může obsahovat víc než jednu ekvivalentní hodnotu, Set nejvýše jednu.
+
+Další úroveň agregace představuje koncept Field. Zde jsme konečně na trochu jisté půdě: Field buď obsahuje jeden (nepojmenovaný) Value[Multi]Set anebo obsahuje mapu s klíči typu (asi nejlépe) std::string a hodnotami typu Value[Multi]Set. Tento mechanismus umožňuje Fieldu popisovat informace o tom, jakou hodnotu/hodnoty dané políčko teoreticky může obsahovat, jinými slovy jaké hodnoty by do něj vůbec potenciálně šlo napsat a jaké hodnoty jsou natolik nesmyslné, že je do něj napsat nelze.
+
+Worker objekty pracují s "instancializovanými" Fieldy, což jsou instance konceptu FieldStatus. Nejpozději zde začíná mít smysl interpretace Value[Multi]Setů jakožto souborů hodnot, které nejenže by do Fieldu šlo napsat, ale jež pro daný Field ještě nejsou vyloučeny, tj. v nejjednodušším případě se při inicializaci do FieldStatusu zapíšou všechny přípustné hodnoty, načež se hledání provádí postupnou eliminací těchto hodnot, dokud nezbude jediná, která je řešením tohoto políčka.
+
+FieldDeduction je objekt, který lze aplikovat na FieldStatus (který má asi k tomuto účelu nějakou metodu), a tato aplikace vede k eliminaci jedné nebo více Values z FieldStatusu; jednodušší verze předpokládá, že Deduction je platná, pouze pokud eliminuje hodnody ve FieldStatusu přítomné, komplikovanější nepovažuje ze chybu, pokud vede k eliminaci již dříve vyloučené hodnoty.
+
+Na další úrovni máme Grid, ten obsahuje skupinu Fieldů, uspořádaných do nějakého obrazce a v rámci tohoto obrazce indexovatelných vhodně rozsáhlými tuply integerů. Existuje rovněž CompositeGrid, který lze popsat obdobně; jediný rozdíl oproti Gridu je, že CompositeGrid obsahuje jako prvky jiné Gridy, nikoli Fieldy.
+
+Zobecněním FieldStatusů pro Gridy jsou GridStatusy. I zde Workery pracují pouze s GridStatusy, ne přímo s Gridy, a GridStatus se vytváří na základě Gridu jako množina FieldStatusů, kde každý FieldStatus odpovídá Fieldu původního Gridu. Krok Grid->GridStatus nejspíš eliminuje potřebu připustit CompositeGridStatus, jakkoli v tuto chvíli není jisté, zda tato eliminace práci (programátorovi) šetří nebo přidává.
+
+GridDeduction je zobecnění FieldDeductiony: obsahuje navíc identifikátor Fieldu (příp. Fieldů) v rámci (obecně Composite) Gridu. Na rozdíl od FieldDeductiony se aplikuje na GridStatus, nikoli na FieldStatus.
+
+Zásadním konceptem pro funkčnost Workerů je Condition, což je objekt, schopný v nejjednodušší verzi rozhodnout o stavu GridStatusu, zda je "rozbitý" anebo ne. (Zdá se, že Worker zvaný Checker pro svou funkci nepotřebuje nic dalšího: vezme resultGridStatus, zavolá na něm všechny známé podmínky, a pokud žádná neřekne, že je rozbitý, pak je řešení v pořádku). Méně jednoduché verze Conditiony pak dokáží navíc ještě vrátit jednu nebo více Deduction, podle nichž ostatní Workery mohou řešení hledat.
+
+Finálním konceptem LogickerLibu je PuzzleAssignment, který agreguje starting GridStatus (inicializovaný daty z Assignmentu) a Conditiony (inicializované daty z PuzzleTypu + Assignmentu) do jediného objektu, který je argumentem konstruktoru Workerů. Jako koncept je tato idea jistě užitečná, jako objekt existovat nemusí, protože konstruktory Workerů můžou stejně dobře brát dva paramatery (počáteční GridStatus + vhodně inicializované podmínky), není potřeba agregovat je do jednoho objektu. Zase mít tento Puzzle mezistupeň může případně šetřit čas, rozhodl-li bych se na základě výsledku Solveru, že chci vytvořit a zavolat i Analyzer.
+
+==============LogickerLib interface=========
+Takže došlo k identifikaci následujících konceptů a první úkol je popsat jejich interfacy (způsob jejich vytváření a způsob komunikace mezi nimi):
+
+Value
+Value[Multi]Set
+Field
+FieldStatus
+FieldDeduction
+Grid
+GridStatus
+GridDeduction
+Condition
+PuzzleStatus
+
+==============Condition interface===========
+Jedna ze zajímavých možností specifikování podmínek, které má Puzzle splnit, je zapsat podmínku do PuzzleTypu jako string. To by znamenalo, že zmíněný string musí jít interpretovat jako expression of type bool. Tato expression může brát jako parametry různé možnosti: celý grid nebo množinu (uspořádanou nebo neuspořádanou) políček. Pro uzavřené smyčky by se mohlo dokonce hodit brát množinu políček uspořádanou nikoli podle souřadnic, ale podle hodnot, které v políčkách jsou.
+
+==============Implementation modules========
+Celková struktura projektu by se pak měla skládat z těchto modulů (samostatně kompilovaných, snadno vyměnitelných jednotek s definovanými interfacy):
+1a) PuzzleTypeReader -- pomocí boost.Spirit čte stream s PuzzleType a buildí z něj PuzzleInstanceBuildera
+1b) PuzzleStatusReader -- pomocí boost.Spirit čte stream s Assignmentem nebo Solutionou; buildí z nich PuzzleStatusy
+
+2a) PuzzleTypeLazyList -- seznam známých PuzzleTypů
+2b) PuzzleInstanceBuilder -- posloupnost volání metod z LogickerLib interfacu, která vede k vytvoření PuzzleInstance
+
+3) PuzzleInstance
+3a) PuzzleStatus -- velikost (počet Fieldů) datové složky instance úlohy + odpovídající počet instancí
+                      Fieldů, inicializovaných do stavu, odpovídajícího nějaké vyplněnosti obrazce úlohy
+3b) PuzzleInstance -- inicializované instance Condition, obsahující konkrétní indexy Fieldů, 
+                         s nimiž jednotlivé instance Condition pracují
+                     plus AssignmentStatus, tj. PuzzleStatus, odpovídající zadanému obrazci
+3c) Condition
+3d) Deduction
+
+4) Worker
+4a) Checker -- funkce s dvěma parametry (PuzzleInstance instance, PuzzleStatus solution),
+                  která vrací true/false, nebo asi spíš proč false, že
+4b) Analyzer -- funkce s jedním až třemi parametry (PuzzleInstance instance [, AnalysisProgressTracer tracer] 
+                  [, AnalyzerStrategy strategy]), která vrací PuzzleInstance takovou, že tato projde Checkerem
+            
+
+=============Vstupy==================
+Existují 3 typy vstupních souborů:
+A) PuzzleType
+B) Assignment
+C) Solution
+
+Každý vstupní stream začíná hlavičkou, z níž se pozná, co a jak:
+    Assignment má v hlavičce odkaz na PuzzleType
+    Solution má v hlavičce odkaz na Assignment a tím tedy i PuzzleType
+
+  Hlavička taky identifikuje formát streamu, který určí, jak interpretovat zbytek streamu.
+
+================Výstupy==============
+Výstupem workerů jsou dva typy dat:
+a) jednoduchý je Solution, což je typicky velmi jednoduché -- max jedna hodnota na jedno políčko
+b) složitější jsou výstupy z analýzy, které tvoří 1) PuzzleStatusy, 2) Deductiony, 3) orientované grafy, složené z 1) a 2).
+
+Je otázka, zda vstupní a výstupní Solution jsou natolik stejné, že pro jejich čtení i zápis stačí specifikovat jediný formát; ostatní typy dat jsou očividně zcela rozdílné a každý potřebuje vlastní formát. Chce to ještě více promyslet, ale zdá se mi nyní, že zkrátka každý tento typ dat (Assignment, Solution, PuzzleStatus, Deduction, graf) musí mít v PuzzleType souboru specifikovaný/é formát/y, do nichž se vejde, a že někdo, kdo v mapě výše zatím není, musí být zodpovědný za čtení/zápis těchto datových typů do/ze (datových) streamů. Na těchto datových streamech pak ještě mají být navěšené "charové" streamy, zodpovědné za převod mezi elementárními daty a chary. Do toho všeho rovněž nějak musí zapadat boost.Spirit, který by měl umět implementaci slušně zjednodušit a dá Bůh i pomoct s návrhem.
+
+=========Interface 3)PuzzleInstance -> 4)Worker==========
+Komunikaci 3) -> 4) zprostředkuje Condition, PuzzleInstance by měl mj. obsahovat odkaz na v hierarchii Condition nejvýše položenou CompositeConditionu a tudíž fungovat jako producent všech dedukcí.
+
+
+
+
+
+
+===========Checker::Condition vs Solver::Condition=======
+Jdo o to, nad cim maji conditiony operovat: nad Fields nebo nad Values.
+
+!!Field je vec, do ktere se vejde nejvys 1 hodnota; pokud by nejaka uloha vyzadovala zapis vice nez 1 hodnoty, bude Puzzle obsahovat vice Gridu (pomyslne polozenych pres sebe)!!
+
+SudokuCondition (value1 != value2)
+Checker::FieldStatus tedy obsahuje prave jednu Value and that's it (Empty je taky Value)
+Solver::FieldStatus muze byt Decided (stejne vlastnosti jako Checker::FieldStatus) anebo Undecided (pak vi, jake Values jsou jeste pripustne -- chci rict umi poznat, jestli nejaka hodnota muze byt, a umi udelat iterator, ktery "generuje" mozne hodnoty)
+
+??Dalsi vec je, ze zadani obsahuje nerozhodnuta policka, takze pomoci vyse uvedeneho Checker::FieldStatusu se zadani neda specifikovat??
+
+Value je, zda se, jednoho ze dvou typu:
+1) porovnatelne na ruznost
+2) prevoditelne na int
+
+Takze to vypada, ze Field ma 4 zodpovednosti:
+1) vratit svou Decided hodnotu (a vyjimku, kdyz je Undecided)
+2) poznat, jestli dana hodnota muze byt
+3) eliminovat ze sebe urcitou hodnotu (a invalidovat tim iteratory)
+4) vratit iterator pripustnych hodnot
+
+Grid ma tyto zodpovednosti:
+1) delat mapu mezi Coords a vhodnymi Fields (pokud Grid ma obsahovat ruzne typy, je potreba pouzit nejaky druh ?VariantFieldu?)
+2) znat svou Topologii a sve rozmery
+
+Topologie ma tyto zodpovednosti:
+1) zna sve rozmery
+2) na zaklade rozmeru vi, jake Coordsy existuji
+3) na zaklade rozmeru vi, jake CoordsGroupy existuji a jake Coordsy do nich patri
+4) vi, jake CoordsMetaGroupy existuji, a ktere CoordsGroupy do nich patri
+5) vi, jake vztahy mezi policky zna (jsou to nejake public static hodnoty, treba enum)
+6) umi rozhodnout, zda dana dvojice Coordsu splnuje dany vztah
+7) umi vratit vsechny Coordsy, ktere jsou k danemu policku v danem vztahu, prip. v danym vztazich
+
+Conditiona:
+a) operuje na hodnotach, pak muze byt ok nebo broken
+b) operuje na fieldech, pak muze byt (ok, broken nebo unknown) a muze vymyslet FieldDeductions
+
+Ortogonalne instance Conditiony zna sva policka

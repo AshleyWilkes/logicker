@@ -92,6 +92,20 @@ namespace logicker::core {
     parts_.push_back(std::move(part));
   }
 
+  //tohle budu potrebovat a neni to tak trivialni, aby se mi to chtelo psat znova
+  /*template<class FieldType, class Topology>
+  bool
+  composite_condition_instance<FieldType, Topology>::is_satisfied_by(const grid<FieldType, Topology>& grid) const {
+    for (auto it = parts_.begin(); it != parts_.end(); ++it) {
+      if (! (*it)->is_satisfied_by(grid)) {
+        return false;
+      }
+    }
+    return true;
+    //return std::all_of(parts_.begin(), parts_.end(), 
+        //[grid](auto part){ return part->is_satisfied_by(grid); });
+  }*/
+
   template<class FieldType>
   bool 
   composite_condition_instance<FieldType>::is_satisfied_by(const std::vector<typename FieldType::value_type>& values) const {

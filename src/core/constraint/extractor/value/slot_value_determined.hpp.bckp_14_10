@@ -1,0 +1,29 @@
+#pragma once
+#include "../value_extractor.hpp"
+
+namespace logicker::core::constraint::extractor::value {
+  template<typename GridSlotId, typename GridValueType>
+  class slot_value_determined : public value_extractor<bool, grid<GridSlotId, GridValueType>> {
+    public:
+      slot_value_determined( GridSlotId slot_id );
+      bool extract( const grid<GridSlotId, GridValueType>& grid, bool throw_on_undecided = true ) const override;
+    private:
+      const GridSlotId slot_id_;
+  };
+
+  template<typename GridSlotId, typename GridValueType>
+  slot_value_determined<GridSlotId, GridValueType>::slot_value_determined( GridSlotId slot_id ) : slot_id_{ slot_id } {}
+
+  template<typename GridSlotId, typename GridValueType>
+  bool
+  slot_value_determined<GridSlotId, GridValueType>::extract( const grid<GridSlotId, GridValueType>& grid, bool throw_on_undecided ) const {
+    auto slot = grid.get_slot( slot_id_ );
+    if ( slot.is_decided() ){
+      return true;
+    } else if ( throw_on_undecided ){
+      throw "core/constraint/extractor/value/slot_value_determined throwing on undecided";
+    } else {
+      return false;
+    }
+  }
+}

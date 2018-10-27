@@ -1,0 +1,7 @@
+{
+  "Size":3,
+  "Givens":[
+    {"Row":0, "Col":0, "Value":1},
+    {"Row":1, "Col":1, "Value":2}
+  ]
+}

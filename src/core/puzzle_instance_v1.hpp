@@ -107,7 +107,8 @@ namespace logicker::core {
       auto group_coords = grid_.topology().get_coords_in_group(group);
       std::vector<int> field_indices;
       for (size_t i = 0 ; i < group_coords.size(); ++i) {
-        field_indices.push_back( group_coords.at(i).index() );
+        //field_indices.push_back( group_coords.at(i).index() );
+        field_indices.push_back( grid_.topology().coords_index( group_coords.at(i) ));
       }
       grid_conds_.push_back(
           condition_instance::create_instance( cond_desc.second, field_indices));
