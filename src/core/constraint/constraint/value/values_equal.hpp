@@ -6,13 +6,14 @@ namespace logicker::core::constraint::value {
   template<typename ValueType, typename Grid>
   class values_equal : public value_constraint<ValueType, Grid> {
     public:
-      values_equal(
-          const extractor::value_extractor<ValueType, Grid>& value1,
-          const extractor::value_extractor<ValueType, Grid>& value2 );
       template<typename Extractor>
       values_equal(
-          const Extractor& value1,
-          const ValueType& value2 );
+          const Extractor& value_1,
+          const Extractor& value_2 );
+      template<typename Extractor>
+      values_equal(
+          const Extractor& value_1,
+          const ValueType& value_2 );
 
       constraint_status is_satisfied_by( const Grid& grid ) const override;
     private:
@@ -30,10 +31,18 @@ namespace logicker::core::constraint::value {
   template<typename ValueType, typename Grid>
   template<typename Extractor>
   values_equal<ValueType, Grid>::values_equal(
-      const Extractor& value1,
-      const ValueType& value2) : 
-    extractor_1_{ std::make_shared<Extractor>( value1 )},
-    extractor_2_{ std::make_shared<constant>( value2 )} {}
+      const Extractor& value_1,
+      const Extractor& value_2 ):
+    extractor_1_{ std::make_shared<Extractor>( value_1 )},
+    extractor_2_{ std::make_shared<Extractor>( value_2 )} {}
+
+  template<typename ValueType, typename Grid>
+  template<typename Extractor>
+  values_equal<ValueType, Grid>::values_equal(
+      const Extractor& value_1,
+      const ValueType& value_2) : 
+    extractor_1_{ std::make_shared<Extractor>( value_1 )},
+    extractor_2_{ std::make_shared<constant>( value_2 )} {}
     //extractor_1_{ value1 }, 
     //extractor_2_{ extractor::value::constant<ValueType, Grid>{ value2 }} {}
 

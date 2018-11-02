@@ -2,6 +2,7 @@
 #include "constraint/givens.hpp"
 #include "constraint/regions.hpp"
 #include "elements/topology/rectangle.hpp"
+#include "elements/topology/square.hpp"
 
 namespace logicker::core {
   template<typename Topology, typename ValueSlotName, template <typename...> typename Container = std::vector>
@@ -276,8 +277,12 @@ namespace logicker::core {
       using PuzzleInstance = core::puzzle_instance<Grid, Constraint, Topology, SolutionValueType>;
       using SolutionValType = SolutionValueType;
 
+      puzzle( const Topology& topology );
       puzzle( const Topology& topology, const Givens& givens );
   };
+
+  template<typename Topology, typename ValueSlotName, typename GivensValueType, typename SolutionValueType>
+  puzzle<Topology, ValueSlotName, GivensValueType, SolutionValueType>::puzzle( const Topology& topology ) : topology_{ topology } {}
 
   template<typename Topology, typename ValueSlotName, typename GivensValueType, typename SolutionValueType>
   puzzle<Topology, ValueSlotName, GivensValueType, SolutionValueType>::puzzle( const Topology& topology, const Givens& givens ) : topology_{ topology }, givens_{ givens } {}
@@ -317,13 +322,15 @@ namespace logicker::core {
       using Puzzle = puzzle<Topology, ValueSlotName, ValueType, ValueType>;
       using Givens = typename Puzzle::Givens;
     public:
+      simple_puzzle( const Topology& topology );
       simple_puzzle( const Topology& topology, const Givens& givens );
   };
 
   template<typename Topology, typename ValueSlotName, typename ValueType>
+  simple_puzzle<Topology, ValueSlotName, ValueType>::simple_puzzle( const Topology& topology ) : puzzle<Topology, ValueSlotName, ValueType, ValueType>{ topology } {}
+
+  template<typename Topology, typename ValueSlotName, typename ValueType>
   simple_puzzle<Topology, ValueSlotName, ValueType>::simple_puzzle( const Topology& topology, const Givens& givens) : puzzle<Topology, ValueSlotName, ValueType, ValueType>{ topology, givens } {}
-
-
 
   template<typename Topology, typename ValueSlotName, typename GivensValueType, typename SolutionValueType>
   typename puzzle<Topology, ValueSlotName, GivensValueType, SolutionValueType>::Givens
@@ -341,6 +348,8 @@ namespace logicker::core {
     return result;
   }
 
+  //??WUT? nebylo by ponekud citelnejsi tuhle metodu vubec nemit a implementovat
+  //ji jako by byla inline (tam, kde ji volam, volat primo input.get()) ??
   template<typename Topology, typename ValueSlotName, typename GivensValueType, typename SolutionValueType>
   typename puzzle<Topology, ValueSlotName, GivensValueType, SolutionValueType>::RegionIds
   puzzle<Topology, ValueSlotName, GivensValueType, SolutionValueType>::parse_region_ids( const core::vector_input_node& regions_input ) {

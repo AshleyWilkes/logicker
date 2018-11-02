@@ -30,6 +30,8 @@ namespace logicker::core::topology {
     public:
       using const_iterator = typename Container<Coords>::const_iterator;
 
+      coords_group( const std::string& id );
+
       void add( const Coords& coords );
 
       const_iterator begin() const;
@@ -37,11 +39,17 @@ namespace logicker::core::topology {
 
       std::size_t size() const;
 
+      std::string id() const;
+
       template<typename CoordsFilter>
       coords_group& apply_filter( CoordsFilter filter );
     private:
       Container<Coords> elems_;
+      std::string id_;
   };
+
+  template<typename Coords, template<typename...> typename Container>
+  coords_group<Coords, Container>::coords_group( const std::string& id ) : id_{ id } {}
 
   template<typename Coords, template<typename...> typename Container>
   void
@@ -65,6 +73,12 @@ namespace logicker::core::topology {
   std::size_t
   coords_group<Coords, Container>::size() const {
     return elems_.size();
+  }
+
+  template<typename Coords, template<typename...> typename Container>
+  std::string
+  coords_group<Coords, Container>::id() const {
+    return id_;
   }
 
   template<typename Coords, template<typename...> typename Container>
@@ -110,7 +124,7 @@ namespace logicker::core::topology {
       auto coords = *centers_it;
       auto region_id = *regions_it;
       if ( map.find( region_id ) == map.end() ) {
-        map.insert({ region_id, coords_group<Coords>{} } );
+        map.insert({ region_id, coords_group<Coords>{ "Region " + region_id } } );
       }
       map.find( region_id )->second.add( coords );
     }
@@ -332,7 +346,7 @@ namespace logicker::core::topology {
 
   coords_group<rectangle::coords>
   rectangle::cg_centers() const {
-    coords_group<coords> result;
+    coords_group<coords> result{ "Centers" };
     for (int row = 0; row < size_.second; ++row) {
       for (int col = 0; col < size_.first; ++col) {
         result.add({ row, col });
@@ -344,7 +358,7 @@ namespace logicker::core::topology {
   coords_group<rectangle::coords>
   rectangle::cg_row( int index, bool reverse_dir ) const {
     //sanity check index!
-    coords_group<coords> result;
+    coords_group<coords> result{ "Row " + std::to_string( index ) };
     if ( reverse_dir ) {
       for ( int col = size_.first - 1; col >= 0; --col ) {
         result.add({ index, col });
@@ -360,7 +374,7 @@ namespace logicker::core::topology {
   coords_group<rectangle::coords>
   rectangle::cg_col( int index, bool reverse_dir ) const {
     //sanity check index!
-    coords_group<coords> result;
+    coords_group<coords> result{ "Col " + std::to_string( index ) };
     if ( reverse_dir ) {
       for ( int row = size_.second - 1; row >= 0; --row ) {
         result.add({ row, index });
@@ -387,10 +401,27 @@ namespace logicker::core::topology {
 
   coords_group<rectangle::coords>
   rectangle::cg_neighs( const coords& root, bool incl_corner, bool incl_side ) const {
-    coords_group<coords> result;
+    coords_group<coords> result{ "Neighs of " + root.to_string() };
     for ( coords coords : cg_centers() ) {
       if ( are_neighs( root, coords, incl_corner, incl_side ) ) {
         result.add( coords );
+      }
+    }
+    return result;
+  }
+
+  coords_meta_group<rectangle::coords>
+  rectangle::cmg_neigh_pairs( bool ordered, bool incl_corner, bool incl_side ) const {
+    coords_meta_group<coords> result;
+    auto centers = cg_centers();
+    for ( auto coords_it_1 = centers.begin(); coords_it_1 != centers.end(); ++coords_it_1 ) {
+      for ( auto coords_it_2 = coords_it_1; coords_it_2 != centers.end(); ++coords_it_2 ) {
+        if ( are_neighs( *coords_it_1, *coords_it_2, incl_corner, incl_side ) ) {
+          coords_group<coords> cgroup{ "Neighs " + coords_it_1->to_string() + " and " + coords_it_2->to_string() };
+          cgroup.add( *coords_it_1 );
+          cgroup.add( *coords_it_2 );
+          result.add( cgroup );
+        }
       }
     }
     return result;

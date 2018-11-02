@@ -1,7 +1,13 @@
 #include "puzzle/simple_puzzles.hpp"
+#include "puzzle/simple/magnets.hpp"
+#include "puzzle/simple/norinori.hpp"
+#include "puzzle/simple/staircases.hpp"
+#include "puzzle/simple/elements.hpp"
 #include "puzzle/simple/latin_square.hpp"
 #include "puzzle/simple/mines.hpp"
 #include "puzzle/simple/sudoku.hpp"
+#include "puzzle/simple/sudoku_classic.hpp"
+#include "puzzle/simple/star_battle.hpp"
 #include "checker/even_newer.hpp"
 //#include "puzzle/latin_square.hpp"
 #include "core/input_node.hpp"
@@ -96,7 +102,7 @@ int main() {
     2,3,4,1,
     4,1,2,3};*/
 
-  std::vector<int> sudoku_class_vals {
+  std::vector<int> sudoku_vals {
     7,5,6,3,4,2,1,9,8,
     1,4,8,9,2,5,7,3,6,
     6,7,9,8,5,3,2,1,4,
@@ -108,11 +114,65 @@ int main() {
     9,3,5,4,7,6,8,2,1
   };
 
+  std::vector<int> sudoku_classic_vals {
+    6,8,7,9,5,3,4,1,2,
+    4,1,5,2,7,8,3,6,9,
+    9,3,2,6,4,1,5,7,8,
+    3,7,8,1,9,2,6,5,4,
+    2,4,6,3,8,5,7,9,1,
+    1,5,9,7,6,4,2,8,3,
+    5,2,4,8,1,7,9,3,6,
+    7,6,1,4,3,9,8,2,5,
+    8,9,3,5,2,6,1,4,7
+  };
+
   std::vector<bool> mines_vals {
     0,1,0,0,
     1,0,1,0,
     0,0,1,1,
     0,0,0,0
+  };
+
+  std::vector<bool> star_battle_vals {
+    0,0,1,0,0,0,0,
+    1,0,0,0,0,0,0,
+    0,0,0,1,0,0,0,
+    0,0,0,0,0,0,1,
+    0,0,0,0,1,0,0,
+    0,1,0,0,0,0,0,
+    0,0,0,0,0,1,0
+  };
+
+  std::vector<int> elements_vals {
+    3,3,0,2,
+    1,2,1,3,
+    0,3,0,2,
+    1,2,0,3
+  };
+
+  std::vector<int> staircases_vals {
+    3,4,1,2,5,6,
+    1,3,2,6,4,5,
+    4,2,6,5,3,1,
+    6,5,3,4,1,2,
+    2,1,5,3,6,4,
+    5,6,4,1,2,3
+  };
+
+  std::vector<bool> norinori_vals {
+    0,1,1,0,
+    1,0,0,1,
+    1,0,0,1,
+    0,1,1,0
+  };
+
+  std::vector<int> magnets_vals {
+     1,-1, 1,-1, 1, 0,
+     0, 0, 0, 0,-1, 0,
+     0, 0, 0, 0, 1,-1,
+     1,-1, 1, 0 ,0 ,0,
+    -1, 0,-1, 0, 0, 0,
+     1, 0, 0, 0, 1,-1
   };
 
   /*std::cout << "Simple Puzzles: \n";
@@ -131,43 +191,29 @@ int main() {
   logicker::run::check_puzzle<LatinSquare>( "latin_square3x3.lgc", latin_square3x3_vals );
 
   using Sudoku = logicker::puzzle::simples::Sudoku;
-  logicker::run::check_puzzle<Sudoku>( "sudoku_classic.lgc", sudoku_class_vals );
+  logicker::run::check_puzzle<Sudoku>( "sudoku.lgc", sudoku_vals );
+
+  using SudokuClassic = logicker::puzzle::simples::SudokuClassic;
+  logicker::run::check_puzzle<SudokuClassic>( "sudoku_classic.lgc", sudoku_classic_vals );
   
   using Mines = logicker::puzzle::simples::Mines;
   logicker::run::check_puzzle<Mines>( "mines.lgc", mines_vals );
-  /*using logicker::puzzle::latin_square;
-  using logicker::core::puzzle_instance_v1;
-  using factory_t = logicker::core::puzzle_instance_factory<latin_square>;
-  using puzzle_t = puzzle_instance_v1<latin_square>;
-  using checker_t = logicker::core::old_checker::checker<puzzle_t>;
 
-  //using base_input = logicker::core::input_node_base;
-  //using int_input = logicker::core::int_input_node;*/
-  /*using solver_t = logicker::core::old_solver::solver<puzzle_t>;
-  using solver_factory_t = logicker::core::old_solver::solver_factory<puzzle_t>;
+  using StarBattle = logicker::puzzle::simples::StarBattle;
+  logicker::run::check_puzzle<StarBattle>( "star_battle.lgc", star_battle_vals );
 
-  puzzle_t puzzle_inst2 = factory_t::create( input );
-  solver_t solver = solver_factory_t().create_solver_for_assignment( std::move(puzzle_inst2) );
-  std::cout << "Solver's solution:\n" << solver.get_solution();
+  using Elements = logicker::puzzle::simples::Elements;
+  logicker::run::check_puzzle<Elements>( "elements.lgc", elements_vals );
 
-  puzzle_t puzzle_inst = factory_t::create( input );
-  checker_t checker{ std::move(puzzle_inst) };
+  using Staircases = logicker::puzzle::simples::Staircases;
+  logicker::run::check_puzzle<Staircases>( "staircases.lgc", staircases_vals );
 
-  std::cout << "Solved by vals: " << std::boolalpha << checker.is_solved_by(vals) << '\n';
+  using Norinori = logicker::puzzle::simples::Norinori;
+  logicker::run::check_puzzle<Norinori>( "norinori.lgc", norinori_vals );
 
-  puzzle_t::grid_type sol_grid = checker.get_assignment_grid();
-  sol_grid.clear();
-  sol_grid.set_values(vals);
+  //using Magnets = logicker::puzzle::simples::Magnets;
+  //logicker::run::better_check_puzzle_file<Magnets>( "magnets.lgc" );
 
-  std::cout << "Solved by grid: " << std::boolalpha << checker.is_solved_by(sol_grid) << '\n';
-
-  using new_checker_t = logicker::core::checker::checker<latin_square>;
-  new_checker_t checker3 = new_checker_t::create( input );
-  typename new_checker_t::grid_t sol_grid3 = checker3.assignment_grid();
-  sol_grid3.clear();
-  sol_grid3.set_values(vals);
-
-  std::cout << "New checker: solved by grid: " << std::boolalpha << checker3.is_solved_by( sol_grid3 ) << '\n';*/
   } catch (char const* e) {
     std::cout << e << '\n';
   } catch (std::string e) {

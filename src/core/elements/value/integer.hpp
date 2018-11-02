@@ -8,6 +8,7 @@ namespace logicker::core::value {
       integer( int value );
       int get() const { return value_; }
       static std::vector<integer> range( int min, int max );
+      static std::vector<integer> given( int given );
       std::string to_string() const;
     private:
       int value_;
@@ -25,6 +26,12 @@ namespace logicker::core::value {
     for ( int i = min; i <= max; ++i ) {
       result.push_back( i );
     }
+    return result;
+  }
+
+  std::vector<integer>
+  integer::given( int given ) {
+    std::vector<integer> result{ given };
     return result;
   }
 

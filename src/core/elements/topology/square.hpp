@@ -1,7 +1,7 @@
 #pragma once
 #include "rectangle.hpp"
 
-namespace logicker::core {
+namespace logicker::core::topology {
   class square : public rectangle {
     public:
       explicit square(int size) : rectangle( size, size ) {}

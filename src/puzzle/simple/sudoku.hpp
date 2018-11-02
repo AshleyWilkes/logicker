@@ -14,9 +14,9 @@ namespace logicker::puzzle::simples {
     public:
       static Sudoku create_instance( const core::input_node_base& input );
       PuzzleInstance get_instance();//temp; delete
-    private:
+    protected:
       Sudoku( int size, const RegionIds& region_ids, const Givens& givens );
-
+    private:
       core::constraint::value_set<ValueType> value_set_;
       //Regions regions_;
       core::topology::coords_meta_group<Topology::coords> regions_;
@@ -69,6 +69,9 @@ namespace logicker::puzzle::simples {
       givens_constraint_.add_constraint( constraint );
     }
 
+    //!!!!!!rows_cols a regions maji stejna tela; pripsat mergovani vice
+    //CoordsGroups do jedne a pomoci teto schoponosti jeden z nasledujicich
+    //for-cyklu zrusit!!!!!!!
     /*for ( auto region : topology_.get_all_coords_groups( core::CMG_rows_cols ) ) {
       auto region_coords = topology_.get_coords_in_group( region );
       auto region_slot_ids = make_slot_ids( region_coords, "Value" );*/
